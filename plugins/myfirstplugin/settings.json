@@ -1,0 +1,8 @@
+{
+    "required_int": 10,
+    "required_float": 10.4,
+    "required_str": "Ciao",
+    "required_enum": "Daniele",
+    "prefix": "Tu sei lo stregatto.",
+    "suffix": ""
+}
