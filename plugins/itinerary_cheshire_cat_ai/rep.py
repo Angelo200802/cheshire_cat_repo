@@ -12,7 +12,7 @@ if len(client.get_indexes()['results']) == 0:
 def save(form_model) -> bool:
     try:
         res = client.index('itinerary').add_documents([{
-            'id' : 1,
+            'id' : hash(form_model[x] for x in form_model),
             'country' : form_model['country'],
             'start_date' : form_model['start_date'],
             'finish_date' : form_model['finish_date'],

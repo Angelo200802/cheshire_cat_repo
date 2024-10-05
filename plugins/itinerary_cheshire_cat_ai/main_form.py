@@ -15,18 +15,19 @@ class Itinerary(BaseModel):
 
     @field_validator('country')
     def check_fields(cls,c):
-        if c is None or not re.match(r'^[a-zA-Z\s]+$', c):
+        if not re.match(r'^[a-zA-Z\s]+$', c):
             raise ValueError("La città inserita non è valida")
         return c
     
     @field_validator('budget')
     def check_budget(cls,b):
-        if b is None or b < 0:
+        if b < 0:
             raise ValueError("Non puoi inserire un valore minore di 0")
+        b = round(b,2)
         return b
     @field_validator('start_date')
     def check_start_date(cls,sd):
-        if sd is None or not re.match(r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$',sd) :
+        if not re.match(r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$',sd) :
             raise ValueError("La data di inizio non è valida")
         if datetime.strptime(sd,"%d/%m/%Y") < datetime.now():
             raise ValueError("L'itinerario non può partire da giorni precedenti a oggi")
@@ -34,7 +35,7 @@ class Itinerary(BaseModel):
     
     @field_validator('finish_date')
     def check_finish_date(cls,fd):
-        if fd is None or not re.match(r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$',fd) :
+        if not re.match(r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$',fd) :
             raise ValueError("La data di fine non è valida")
         return fd
     
@@ -118,7 +119,6 @@ class ItinerarySearchForm(CatForm):
     def message(self):
         prompt = ""
         if self._state == CatFormState.WAIT_CONFIRM:
-            model = copy.deepcopy(self._model)
             filter = self.create_query_filter()
             results = search(filter)
             if len(results['hits']) == 0 :
@@ -126,7 +126,8 @@ class ItinerarySearchForm(CatForm):
             else:
                 prompt = f"""Il tuo compito è quello di dire all'utente che i risultati della ricerca 
             sono quelli presenti nel seguente dizionario {results['hits']} in italiano,escludendo il campo id,
-            chiedere se i risultati della ricerca vanno bene """
+            chiedere se i risultati della ricerca vanno bene. Nota bene {results['hits']} non deve essere usato
+            per completare json dalla conversazione. """
                 
         if self._state == CatFormState.INCOMPLETE:
             if 'country' in self._missing_fields:
