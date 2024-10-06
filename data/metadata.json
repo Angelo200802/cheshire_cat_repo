@@ -1,1 +1,0 @@
-{"_default": {"1": {"name": "CoreOnlyAuthConfig", "value": {}, "category": "auth_handler_factory", "setting_id": "f888c319-9188-4d0a-848a-32f4f9d269bf", "updated_at": 1728065317}, "2": {"name": "auth_handler_selected", "value": {"name": "CoreOnlyAuthConfig"}, "category": "auth_handler_factory", "setting_id": "18f4d14f-bf97-4f38-b585-1127daee08c5", "updated_at": 1728065317}}}
