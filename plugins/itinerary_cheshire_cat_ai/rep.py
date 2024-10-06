@@ -1,6 +1,4 @@
 import meilisearch
-#from cat.log import log
-#da importare dal compose.yml
 MEILISEARCH_URL = "http://meilisearch:7700"
 MEILISEARCH_MASTER_KEY = "A6Tw7yTI37T4Rx5NINnoG2ScZssgy911qaDvSbx7oyY"
 client = meilisearch.Client(MEILISEARCH_URL, MEILISEARCH_MASTER_KEY)
@@ -19,12 +17,8 @@ def save(form_model) -> bool:
             'budget' : form_model['budget'],
             'description' : form_model['description']
         }])
-        print(res)
-        print(form_model)
-        #log.info('Registrazione ok')
         return True
     except Exception as e:
-        #log.error('Registrazione fallita.')
         return False
 
 def search(query:[]) -> any:
@@ -32,5 +26,4 @@ def search(query:[]) -> any:
         results = client.get_index('itinerary').search('',{'filter':query, 'limit':2})
     except Exception as e:
         print(e)
-        #log.error(f'Non è stato possibile cercare informazioni a causa di: {e}')
     return results
