@@ -21,5 +21,5 @@ def save(form_model) -> bool:
         return False
 
 def search(query:list,limit:int) -> any:
-    results = client.get_index('itinerary').search('',{'filter':query, 'limit':2})
+    results = client.get_index('itinerary').search('',{'filter':query, 'limit':limit})
     return results
