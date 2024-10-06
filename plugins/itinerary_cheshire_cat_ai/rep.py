@@ -2,7 +2,7 @@ import meilisearch
 MEILISEARCH_URL = "http://meilisearch:7700"
 MEILISEARCH_MASTER_KEY = "A6Tw7yTI37T4Rx5NINnoG2ScZssgy911qaDvSbx7oyY"
 client = meilisearch.Client(MEILISEARCH_URL, MEILISEARCH_MASTER_KEY)
-
+#x
 if len(client.get_indexes()['results']) == 0:
     client.create_index('itinerary')
     client.index('itinerary').update_filterable_attributes(['country','start_date','finish_date', 'description', 'budget'])
