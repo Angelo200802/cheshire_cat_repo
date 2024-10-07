@@ -1,12 +1,12 @@
 import meilisearch
 MEILISEARCH_URL = "http://meilisearch:7700"
-MEILISEARCH_MASTER_KEY = "A6Tw7yTI37T4Rx5NINnoG2ScZssgy911qaDvSbx7oyY"
+MEILISEARCH_MASTER_KEY = "A6Tw7yTI37T4Rx5NINnoG2ScZssgy911qaDvSbx7oyY" #prendere dal compose
 client = meilisearch.Client(MEILISEARCH_URL, MEILISEARCH_MASTER_KEY)
 if len(client.get_indexes()['results']) == 0:
     client.create_index('itinerary')
     client.index('itinerary').update_filterable_attributes(['country','start_date','finish_date', 'description', 'budget'])
 
-def save(form_model) -> bool:
+def save(form_model) -> bool: #deve essere il metodo di una interfaccia
     try:
         res = client.index('itinerary').add_documents([{
             'id' : hash(form_model[x] for x in form_model),
@@ -20,6 +20,6 @@ def save(form_model) -> bool:
     except Exception as e:
         return False
 
-def search(query:list,limit:int) -> any:
+def search(query:list,limit:int) -> any: #deve essere il metodo di una interfaccia
     results = client.get_index('itinerary').search('',{'filter':query, 'limit':limit})
     return results

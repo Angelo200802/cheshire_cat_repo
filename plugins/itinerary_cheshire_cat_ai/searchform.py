@@ -19,25 +19,30 @@ class ItinerarySearchForm(CatForm):
     attempt = 0
 
     def submit(self,form_model):
+        self.limit = 3
+        self.attempt = 0
         prompt = """Il tuo compito è ringraziare l'utente per averti usato"""
         out = self.cat.llm(prompt)
         return {'output':out}
     
-    def create_query_filter(self) -> list:
+    def create_query_filter(self) -> list: #deve essere il metodo di una interfaccia
         query_filter = []
         for field in self._model:
                 query_filter.append(f'{field} = "{self._model[field]}"')
         return query_filter
         
-    
     def message(self):
         prompt = ""
-        if self._state == CatFormState.WAIT_CONFIRM:
+        if len(self._errors) != 0:
+               log.error(self._errors)
+               prompt = f"""Il tuo compito è quello di elencare all'utente i seguenti errori : {self._errors}"""
+        elif self._state == CatFormState.WAIT_CONFIRM:
             filter = self.create_query_filter()
             try:
                 results = search(filter,self.limit)
                 if len(results['hits']) == 0 :
-                    self._state = CatFormState.INCOMPLETE
+                    prompt = f"""Il tuo compito è dire all'utente che non è stato trovato alcun risultato in base ai 
+                    parametri da lui impostati."""
                 else:
                     prompt = f"""
                     Il tuo compito è quello di dire all'utente che i risultati della ricerca 
@@ -48,13 +53,13 @@ class ItinerarySearchForm(CatForm):
             except Exception as e:
                 log.error(e)
                 prompt = "Il tuo compito è quello di informare l'utente che la ricerca è fallita."    
-        if self._state == CatFormState.INCOMPLETE:
-            if len(self._errors) != 0:
-               log.info(self._errors)
-               prompt = f"""Il tuo compito è quello di elencare all'utente i seguenti errori : {self._errors}"""
-            else :
-               prompt = f"""Il tuo compito è quello di dire all'utente che può specificare uno o più dei seguenti campi per 
-               effettuare una ricerca : {self.model_class.model_fields}"""
+        elif self._state == CatFormState.INCOMPLETE:
+            if len(self._missing_fields) > 0:
+                fields = self._missing_fields[0]
+                log.info(self.model_class.model_fields)
+                prompt = f"""Il tuo compito è quello di chiedere all'utente {self.model_class.model_fields[fields].description} in italiano"""
+            else:
+                self._state = CatFormState.CLOSED
         if self._state == CatFormState.CLOSED:
             return self.submit(self._model)
         out = self.cat.llm(prompt)
@@ -62,19 +67,19 @@ class ItinerarySearchForm(CatForm):
     
     
     def next(self):
+        previous_state = self._state
         if self._state == CatFormState.WAIT_CONFIRM:
             if self.confirm():
                 self._state = CatFormState.CLOSED
                 return self.submit(self._model)
             else:
-                #if self.check_exit_intent():
-                    #self._state = CatFormState.CLOSED
-                #else:
+                if self.check_exit_intent():
+                    self._state = CatFormState.CLOSED
+                else:
                     self._state = CatFormState.INCOMPLETE
                     self.attempt += 1
                     if self.attempt % 5 == 0:
                         self.limit += 1
-                    self._model = {}
 
         if self.check_exit_intent():
             self._state = CatFormState.CLOSED
@@ -82,7 +87,7 @@ class ItinerarySearchForm(CatForm):
         if self._state == CatFormState.INCOMPLETE:
             self._model = self.update()
             filter = self.create_query_filter()
-            if len(filter) != 0:
+            if len(filter) != 0 and previous_state != CatFormState.WAIT_CONFIRM:
                 self._state = CatFormState.WAIT_CONFIRM
         if self._state == CatFormState.COMPLETE:
             if self.ask_confirm:
@@ -93,7 +98,8 @@ class ItinerarySearchForm(CatForm):
         return self.message()
     
     def extraction_prompt(self):
-        history = self.cat.working_memory.user_message_json
+        history = self.cat.working_memory.history
+        history = [mex['message'] for mex in history if (mex['who'] == 'Human') or ('risultati' not in mex['message'] and mex['who'] == 'AI')]
         JSON_structure = "{"
         for field_name, field in self.model_class.model_fields.items():
             if field.description:

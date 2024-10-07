@@ -4,7 +4,7 @@ from .meilisearch import save
 from .itinerary import Itinerary 
 from pydantic import ValidationError
 
-@form
+#@form
 class ItineraryRegistrationForm(CatForm):
     description = "Form di registrazione di un itinerario"
     ask_confirm = True
