@@ -25,7 +25,8 @@ class ItinerarySearchForm(CatForm):
     def create_query_filter(self) -> list:
         query_filter = []
         for field in self._model:
-            query_filter.append(f'{field} = "{self._model[field]}"')
+            if field != 'descrizione':
+                query_filter.append(f'{field} = "{self._model[field]}"')
         return query_filter
         
     
@@ -39,16 +40,21 @@ class ItinerarySearchForm(CatForm):
                     self._state = CatFormState.INCOMPLETE
                 else:
                     prompt = f"""
-                    Il tuo compito è quello di dire all'utente, in italinao, che i risultati della ricerca 
-                    sono quelli presenti nel seguente dizionario {results['hits']} escludendo il campo id.
+                    Il tuo compito è quello di dire all'utente che i risultati della ricerca 
+                    sono quelli presenti nel seguente dizionario {results['hits']} escludendo il campo id e traducendo
+                    il nome dei campi in italiano.
                     Infine chiedere se i risultati della ricerca vanno bene.
                     """
             except Exception as e:
                 log.error(e)
                 prompt = "Il tuo compito è quello di informare l'utente che la ricerca è fallita."    
         if self._state == CatFormState.INCOMPLETE:
-           prompt = f"""Il tuo compito è quello di dire all'utente che può specificare uno o più dei seguenti campi per 
-           effettuare una ricerca : {self.model_class.model_fields}"""
+            if len(self._errors) != 0:
+               log.info(self._errors)
+               prompt = f"""Il tuo compito è quello di elencare all'utente i seguenti errori : {self._errors}"""
+            else :
+               prompt = f"""Il tuo compito è quello di dire all'utente che può specificare uno o più dei seguenti campi per 
+               effettuare una ricerca : {self.model_class.model_fields}"""
         if self._state == CatFormState.CLOSED:
             return self.submit(self._model)
         out = self.cat.llm(prompt)
@@ -91,10 +97,8 @@ class ItinerarySearchForm(CatForm):
                 description = field.description
             else:
                 description = ""
-            JSON_structure += f'\n\t"{field_name}": // {description} Must be of type `{field.annotation.__name__}` or `null`'  # field.required?
+            JSON_structure += f'\n\t"{field_name}": // {description} Must be of type `{field.annotation.__name__}` or `null`'  
         JSON_structure += "\n}"
-
-        # TODO: reintroduce examples
         prompt = f"""Your task is to fill up a JSON out of a conversation.
 The JSON must have this format:
 ```json
