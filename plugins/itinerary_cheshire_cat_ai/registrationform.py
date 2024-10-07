@@ -39,7 +39,7 @@ class ItineraryRegistrationForm(CatForm):
                 {[field for name,field in self.model_class.__fields__.items()]}
                 """
             if len(self._errors) != 0:
-                prompt += f"""Il tuo compito è di elencare all'utente i seguenti errori: {self._errors}"""
+                prompt += f"""Elencare all'utente i seguenti errori: {self._errors}"""
         if self._state == CatFormState.WAIT_CONFIRM:
             prompt= f"""Il tuo compito è quello di riepilogare i 
             campi presenti nel seguente dizionario {self._model} come se fossero i campi

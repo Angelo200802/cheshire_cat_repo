@@ -15,7 +15,8 @@ class ItinerarySearchForm(CatForm):
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca']
     model_class = Itinerary
-    
+    limit = 3
+    attempt = 0
 
     def submit(self,form_model):
         prompt = """Il tuo compito è ringraziare l'utente per averti usato"""
@@ -34,7 +35,7 @@ class ItinerarySearchForm(CatForm):
         if self._state == CatFormState.WAIT_CONFIRM:
             filter = self.create_query_filter()
             try:
-                results = search(filter,3)
+                results = search(filter,self.limit)
                 if len(results['hits']) == 0 :
                     self._state = CatFormState.INCOMPLETE
                 else:
@@ -66,10 +67,13 @@ class ItinerarySearchForm(CatForm):
                 self._state = CatFormState.CLOSED
                 return self.submit(self._model)
             else:
-                if self.check_exit_intent():
-                    self._state = CatFormState.CLOSED
-                else:
+                #if self.check_exit_intent():
+                    #self._state = CatFormState.CLOSED
+                #else:
                     self._state = CatFormState.INCOMPLETE
+                    self.attempt += 1
+                    if self.attempt % 5 == 0:
+                        self.limit += 1
                     self._model = {}
 
         if self.check_exit_intent():
