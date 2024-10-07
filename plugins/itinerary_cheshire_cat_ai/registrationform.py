@@ -3,6 +3,7 @@ from cat.log import log
 from .rep import save
 from .itinerary import Itinerary 
 from pydantic import ValidationError
+
 @form
 class ItineraryRegistrationForm(CatForm):
     description = "Form di registrazione di un itinerario"
@@ -33,8 +34,10 @@ class ItineraryRegistrationForm(CatForm):
             if len(self._missing_fields) != 0:
                 for field in self._missing_fields:
                     missing_fields += (field+" ")
-                prompt = f"""Il tuo compito è dire all'utente di specificare i seguenti campi : {missing_fields} tradotti in italiano
-                e in più il campo opzionale 'descrizione'"""
+                prompt = f"""Il tuo compito è dire all'utente di specificare i seguenti campi : {missing_fields} tradotti in italiano.
+                Va inoltre riportato se un campo è opzionale, per fare ciò considera solo dove required è false nella seguente lista: 
+                {[field for name,field in self.model_class.__fields__.items()]}
+                """
             if len(self._errors) != 0:
                 prompt += f"""Il tuo compito è di elencare all'utente i seguenti errori: {self._errors}"""
         if self._state == CatFormState.WAIT_CONFIRM:

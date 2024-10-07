@@ -25,7 +25,6 @@ class ItinerarySearchForm(CatForm):
     def create_query_filter(self) -> list:
         query_filter = []
         for field in self._model:
-            if field != 'descrizione':
                 query_filter.append(f'{field} = "{self._model[field]}"')
         return query_filter
         
