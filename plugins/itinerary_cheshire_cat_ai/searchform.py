@@ -1,6 +1,6 @@
 from cat.experimental.form import form, CatForm, CatFormState 
 from .registrationform import Itinerary
-from .rep import search
+from .meilisearch import search
 from pydantic import ValidationError
 from cat.log import log
 import json 
