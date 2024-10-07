@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ValidationError,Field, field_validator, model_validator
+from pydantic import BaseModel,Field,model_validator
 import re
 from datetime import datetime
 from typing import Optional
@@ -23,4 +23,3 @@ class Itinerary(BaseModel):
                 if date1 > date2:
                     raise ValueError("La data di inizio non può essere successiva alla data di fine")
         return values
-    
