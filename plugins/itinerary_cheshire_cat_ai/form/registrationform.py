@@ -2,10 +2,10 @@ from cat.experimental.form import form, CatForm, CatFormState
 from cat.log import log
 from ..service.meili import MeiliService
 from ..service.BaseService import BaseService
-from ..model.itinerary import Itinerary 
+from ..model.itinerarymodel import Itinerary 
 from pydantic import ValidationError
 
-#@form
+@form
 class ItineraryRegistrationForm(CatForm):
     description = "Form di registrazione di un itinerario"
     ask_confirm = True
@@ -34,9 +34,10 @@ class ItineraryRegistrationForm(CatForm):
             missing_fields = ""
             if len(self._missing_fields) != 0:
                 for field in self._missing_fields:
-                    missing_fields += (field+" ")
+                    missing_fields += (field+", ")
+                log.info(f"MISSING FIELD = {missing_fields}")
                 prompt = f"""Il tuo compito è dire all'utente di specificare i seguenti campi : {missing_fields} tradotti in italiano.
-                Va inoltre riportato se un campo è opzionale, per fare ciò considera solo dove required è false nella seguente lista: 
+                Riporta anche i seguenti campi solamente dove è specificato che required è false e dicendo che sono opzionali.
                 {[field for name,field in self.model_class.__fields__.items()]}
                 """
             if len(self._errors) != 0:

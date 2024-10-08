@@ -1,5 +1,5 @@
 from cat.experimental.form import form, CatForm, CatFormState 
-from .registrationform import Itinerary
+from ..model.itinerarymodel import Itinerary
 from ..service.meili import MeiliService
 from ..service.BaseService import BaseService
 from pydantic import ValidationError
@@ -18,11 +18,9 @@ class ItinerarySearchForm(CatForm):
     model_class = Itinerary
     service : BaseService = MeiliService()
     limit = 3
-    attempt = 0
 
     def submit(self,form_model):
         self.limit = 3
-        self.attempt = 0
         prompt = """Il tuo compito è ringraziare l'utente per averti usato"""
         out = self.cat.llm(prompt)
         return {'output':out}
@@ -30,7 +28,14 @@ class ItinerarySearchForm(CatForm):
     def create_query_filter(self) -> list:
         query_filter = []
         for field in self._model:
-                query_filter.append(f'{field} = "{self._model[field]}"')
+            value = ""
+            if isinstance(self._model[field],list):
+                value = []
+                for v in self._model[field]:
+                    value.append(f"{field} = {v}")
+            else:
+                value = self._model[field]
+            query_filter.append(f'{field} = "{value}"')
         return query_filter
         
     def message(self):
@@ -79,9 +84,6 @@ class ItinerarySearchForm(CatForm):
                     self._state = CatFormState.CLOSED
                 else:
                     self._state = CatFormState.INCOMPLETE
-                    self.attempt += 1
-                    if self.attempt % 5 == 0:
-                        self.limit += 1
 
         if self.check_exit_intent():
             self._state = CatFormState.CLOSED
