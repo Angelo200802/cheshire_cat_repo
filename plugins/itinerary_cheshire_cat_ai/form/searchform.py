@@ -1,6 +1,7 @@
 from cat.experimental.form import form, CatForm, CatFormState 
 from .registrationform import Itinerary
-from .meilisearch import search
+from ..service.meili import MeiliService
+from ..service.BaseService import BaseService
 from pydantic import ValidationError
 from cat.log import log
 import json 
@@ -15,6 +16,7 @@ class ItinerarySearchForm(CatForm):
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca']
     model_class = Itinerary
+    service : BaseService = MeiliService()
     limit = 3
     attempt = 0
 
@@ -25,7 +27,7 @@ class ItinerarySearchForm(CatForm):
         out = self.cat.llm(prompt)
         return {'output':out}
     
-    def create_query_filter(self) -> list: #deve essere il metodo di una interfaccia
+    def create_query_filter(self) -> list:
         query_filter = []
         for field in self._model:
                 query_filter.append(f'{field} = "{self._model[field]}"')
@@ -39,7 +41,7 @@ class ItinerarySearchForm(CatForm):
         elif self._state == CatFormState.WAIT_CONFIRM:
             filter = self.create_query_filter()
             try:
-                results = search(filter,self.limit)
+                results = self.service.search(filter,self.limit)
                 if len(results['hits']) == 0 :
                     prompt = f"""Il tuo compito è dire all'utente che non è stato trovato alcun risultato in base ai 
                     parametri da lui impostati."""

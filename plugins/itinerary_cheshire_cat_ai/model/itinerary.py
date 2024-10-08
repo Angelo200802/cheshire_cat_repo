@@ -7,7 +7,7 @@ class Itinerary(BaseModel):
     start_date : str = Field(description="Data inizio itinerario",pattern = r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$')
     finish_date : str = Field(description="Data di fine dell'itinerario", pattern = r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$')
     budget : float = Field(description="Budget di spesa per l'itinearario",ge=0)
-    info_viaggio : Optional[str] = Field(description="Descrizione delle attività dell'itinerario",default = "")
+    description : Optional[str] = Field(description="Descrizione delle attività dell'itinerario",default = "")
 
     @model_validator(mode='before')
     def check_dates(cls, values):

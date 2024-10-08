@@ -17,7 +17,7 @@ services:
     ports:
       - "7700:7700"
     environment:
-      MEILI_MASTER_KEY: 'A6Tw7yTI37T4Rx5NINnoG2ScZssgy911qaDvSbx7oyY'
+      MEILI_MASTER_KEY: '${MEILI_MASTER_KEY}'
     volumes:
       - ./meili_data:/meili_data
     restart: unless-stopped
