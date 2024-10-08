@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 import requests 
-
+from cat.log import log
 class Categoria(Enum):
     PAESAGGISTICO = "paesaggistico"
     NATURALISTICO = "naturalistico"
@@ -22,14 +22,15 @@ class Itinerary(BaseModel):
     step: list[str] = Field(description="Lista di tappe dell'itinerario")
     #target: Target = Field(description="Target a cui è riferito l'itinerario")
     link: str = Field(description="link del sito a cui accedere per vedere l'itinerario")
-    info : Optional[str] = Field(description="Informazioni del viaggio",default="")
+    info : Optional[str] = Field(description="Informazioni del viaggio",default="Nessuna informazione disponibile")
 
     #@field_validator('link')
     #def check_link(cls, l):
     #    try:
-    #        requests.head(l,allow_redirects=True, timeout=5)
+    #        res = requests.head(l)
     #        return l
-    #    except requests.RequestException:
+    #    except requests.RequestException as e:
+    #        log.error(f"ERRORE = {e}")
     #        raise ValueError("Il link specificato non è valido")
 
     @field_validator('category')

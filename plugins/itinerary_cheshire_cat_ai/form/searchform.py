@@ -16,29 +16,13 @@ class ItinerarySearchForm(CatForm):
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca']
     model_class = Itinerary
-    service : BaseService = MeiliService()
+    service : BaseService = MeiliService('itinerary',Itinerary)
     limit = 3
 
     def submit(self,form_model):
-        self.limit = 3
         prompt = """Il tuo compito è ringraziare l'utente per averti usato"""
         out = self.cat.llm(prompt)
         return {'output':out}
-    
-    def create_query_filter(self) -> list:
-        query_filter = []
-        for field in self._model:
-            if isinstance(self._model[field],list):
-                query_string = ""
-                for i,step in enumerate(self._model[field]):
-                    query_string += f"{field} = {step}"
-                    if i < len(self._model[field])-1:
-                        query_string+=" OR "
-                query_filter.append(query_string)
-            else:
-                value = self._model[field]
-                query_filter.append(f'{field} = "{value}"')
-        return query_filter
         
     def message(self):
         prompt = ""
@@ -46,7 +30,7 @@ class ItinerarySearchForm(CatForm):
                log.error(self._errors)
                prompt = f"""Il tuo compito è quello di elencare all'utente i seguenti errori : {self._errors}"""
         elif self._state == CatFormState.WAIT_CONFIRM:
-            filter = self.create_query_filter()
+            filter = self.service.get_filter_by_dict(self._model)
             try:
                 results = self.service.search(filter,self.limit)
                 if len(results['hits']) == 0 :
@@ -66,7 +50,7 @@ class ItinerarySearchForm(CatForm):
             if len(self._missing_fields) > 0:
                 fields = self._missing_fields[0]
                 log.info(self.model_class.model_fields)
-                prompt = f"""Il tuo compito è quello di chiedere all'utente {self.model_class.model_fields[fields].description} in italiano"""
+                prompt = f"""Il tuo compito è quello di chiedere all'utente {self.model_class.model_fields[fields].description}."""
             else:
                 self._state = CatFormState.CLOSED
         if self._state == CatFormState.CLOSED:
@@ -92,7 +76,7 @@ class ItinerarySearchForm(CatForm):
 
         if self._state == CatFormState.INCOMPLETE:
             self._model = self.update()
-            filter = self.create_query_filter()
+            filter = self.service.get_filter_by_dict(self._model)
             if len(filter) != 0 and previous_state != CatFormState.WAIT_CONFIRM:
                 self._state = CatFormState.WAIT_CONFIRM
         if self._state == CatFormState.COMPLETE:

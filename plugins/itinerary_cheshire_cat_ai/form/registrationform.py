@@ -15,7 +15,7 @@ class ItineraryRegistrationForm(CatForm):
     stop_examples = ['Stop alla registrazione',
                      "Ferma la registrazione"]
     model_class = Itinerary
-    service : BaseService = MeiliService()
+    service : BaseService = MeiliService('itinerary',Itinerary)
 
     def submit(self,form_model):
         prompt = ""
