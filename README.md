@@ -1,6 +1,7 @@
 # cheshire_cat_repo
 Descrizione progetto
 
-possibile problema:
-La ricerca che non si basa sulla data può far vedere itinerari con date precedenti alla data odierna
+-indipendenza di MeiliService dal tipo di dati da salvare e dall'indice
+-Ricerca di tappe parziali da inserire per la ricerca di un itinerario
+-Prendere la master key dal compose
 

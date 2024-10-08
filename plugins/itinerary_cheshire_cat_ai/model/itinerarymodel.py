@@ -13,6 +13,9 @@ class Categoria(Enum):
 class Target(Enum):
     pass
 
+class Step:
+    pass
+
 class Itinerary(BaseModel):
     title: Optional[str] = Field(description="Titolo dell'itinerario",default="Titolo")
     category: Categoria = Field(description=f"la categoria dell'itinerario, i possibili valori sono {[cat for cat in Categoria]}")
