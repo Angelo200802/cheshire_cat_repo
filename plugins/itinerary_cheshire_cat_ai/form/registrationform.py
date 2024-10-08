@@ -37,8 +37,8 @@ class ItineraryRegistrationForm(CatForm):
                     missing_fields += (field+", ")
                 log.info(f"MISSING FIELD = {missing_fields}")
                 prompt = f"""Il tuo compito è dire all'utente di specificare i seguenti campi : {missing_fields} tradotti in italiano.
-                Riporta anche i seguenti campi solamente dove è specificato che required è false e dicendo che sono opzionali.
-                {[field for name,field in self.model_class.__fields__.items()]}
+                Riporta anche i seguenti campi dicendo che sono opzionali solo dove required è false.
+                {[field for name,field in self.model_class.__fields__.items() if name not in self._model]}
                 """
             if len(self._errors) != 0:
                 prompt += f"""Elencare all'utente i seguenti errori: {self._errors}"""
@@ -59,7 +59,7 @@ class ItineraryRegistrationForm(CatForm):
         except ValidationError as e:
             for error_message in e.errors():
                 loc = error_message.get("loc", [])
-                if loc and len(loc) > 0: #QUESTA COSA NON MI PIACE :(
+                if loc and len(loc) > 0: 
                     field_name = loc[0]
                     if error_message["type"] == "missing":
                         self._missing_fields.append(field_name)

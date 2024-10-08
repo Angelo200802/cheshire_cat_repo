@@ -3,7 +3,6 @@ from .BaseService import BaseService
 from ..model.itinerarymodel import Itinerary
 import os 
 from cat.log import log
-
 class MeiliService(BaseService):
     
     def __init__(self):

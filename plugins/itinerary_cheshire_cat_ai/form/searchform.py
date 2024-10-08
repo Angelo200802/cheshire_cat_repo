@@ -28,14 +28,16 @@ class ItinerarySearchForm(CatForm):
     def create_query_filter(self) -> list:
         query_filter = []
         for field in self._model:
-            value = ""
             if isinstance(self._model[field],list):
-                value = []
-                for v in self._model[field]:
-                    value.append(f"{field} = {v}")
+                query_string = ""
+                for i,step in enumerate(self._model[field]):
+                    query_string += f"{field} = {step}"
+                    if i < len(self._model[field])-1:
+                        query_string+=" OR "
+                query_filter.append(query_string)
             else:
                 value = self._model[field]
-            query_filter.append(f'{field} = "{value}"')
+                query_filter.append(f'{field} = "{value}"')
         return query_filter
         
     def message(self):
