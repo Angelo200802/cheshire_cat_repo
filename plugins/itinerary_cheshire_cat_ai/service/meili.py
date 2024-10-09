@@ -34,7 +34,7 @@ class MeiliService(BaseService):
         for field in model:
             if isinstance(model[field],list):
                 query_string = ""
-                for i,step in enumerate(self._model[field]):
+                for i,step in enumerate(model[field]):
                     query_string += f"{field} = {step}"
                     if i < len(model[field])-1:
                         query_string+=" OR "

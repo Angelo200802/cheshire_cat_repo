@@ -1,26 +1,26 @@
 from pydantic import BaseModel, model_validator, Field, field_validator
 from typing import Optional
-from datetime import datetime
 from enum import Enum
 import requests 
+from datetime import datetime
 from cat.log import log
+
 class Categoria(Enum):
     PAESAGGISTICO = "paesaggistico"
     NATURALISTICO = "naturalistico"
     RELIGIOSO = "religioso"
     STORICO_CULTURALI = "storico culturali"
 
-class Target(Enum):
-    pass
-
-class Step:
-    pass
+class Step(BaseModel):
+    country : str = Field()
+    date_time : str = Field()
+    description : str = Field()
+    
 
 class Itinerary(BaseModel):
     title: Optional[str] = Field(description="Titolo dell'itinerario",default="Titolo")
-    category: Categoria = Field(description=f"la categoria dell'itinerario, i possibili valori sono {[cat for cat in Categoria]}")
     step: list[str] = Field(description="Lista di tappe dell'itinerario")
-    #target: Target = Field(description="Target a cui è riferito l'itinerario")
+    category: Categoria = Field(description=f"la categoria dell'itinerario, i possibili valori sono {[cat for cat in Categoria]}")
     link: str = Field(description="link del sito a cui accedere per vedere l'itinerario")
     info : Optional[str] = Field(description="Informazioni del viaggio",default="Nessuna informazione disponibile")
 

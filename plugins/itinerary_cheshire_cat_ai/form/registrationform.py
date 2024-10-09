@@ -1,8 +1,7 @@
 from cat.experimental.form import form, CatForm, CatFormState 
 from cat.log import log
-from ..service.meili import MeiliService
-from ..service.BaseService import BaseService
-from ..model.itinerarymodel import Itinerary 
+from ..service.service import Service
+from ..model.itinerarymodel import Itinerary
 from pydantic import ValidationError
 
 @form
@@ -15,7 +14,7 @@ class ItineraryRegistrationForm(CatForm):
     stop_examples = ['Stop alla registrazione',
                      "Ferma la registrazione"]
     model_class = Itinerary
-    service : BaseService = MeiliService('itinerary',Itinerary)
+    service = Service()
 
     def submit(self,form_model):
         prompt = ""
