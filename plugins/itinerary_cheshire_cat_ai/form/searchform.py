@@ -1,7 +1,6 @@
 from cat.experimental.form import form, CatForm, CatFormState 
 from ..model.itinerarymodel import Itinerary
-from ..service.meili import MeiliService
-from ..service.BaseService import BaseService
+from ..service.service import Service
 from pydantic import ValidationError
 from cat.log import log
 import json 
@@ -16,7 +15,7 @@ class ItinerarySearchForm(CatForm):
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca']
     model_class = Itinerary
-    service : BaseService = MeiliService('itinerary',Itinerary)
+    service = Service()
     limit = 3
 
     def submit(self,form_model):

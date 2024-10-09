@@ -1,7 +1,6 @@
 import meilisearch
 from pydantic import BaseModel
 from .BaseService import BaseService
-from ..model.itinerarymodel import Itinerary
 import os 
 from cat.log import log
 class MeiliService(BaseService):
@@ -15,7 +14,7 @@ class MeiliService(BaseService):
         self.index = index
         if index not in self.client.get_indexes()['results']:
             self.client.create_index(index)
-            self.client.index(index).update_filterable_attributes([field_name for field_name, field in model_class.__fields__.items()])
+        self.client.index(index).update_filterable_attributes([field_name for field_name, field in model_class.__fields__.items()])
     
     def save(self,form_model) -> bool:
         try:
