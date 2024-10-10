@@ -33,7 +33,7 @@ class Telegram:
         self._connections : Dict[str,Connection] = {}
         #APPLICAZIONE TELEGRAM
         self.telegram : Application = ApplicationBuilder().token(token).build()
-        self.bot = self.telegram.bot
+        self.bot : Bot = self.telegram.bot
         #COMMAND HANDLER => GESTIONE DEI COMANDI INVIATI NELLA CHAT
         self.telegram.add_handler(CommandHandler("help",self.help_command)) #FORNISCE LA LISTA DI COMANDI
         self.telegram.add_handler(CommandHandler("search",self.search)) #AVVIA IL FORM DI RICERCA ITINERARI
@@ -63,15 +63,33 @@ class Telegram:
 
         if chat_id not in self._connections: #SE NON ESISTE CREA LA CONNESSIONE
             self._connections[chat_id] = Connection(chat_id,self._out_queue,self.cc_url,self.cc_port)
-        
+            
         if not self._connections[chat_id].is_connected:
             await self._connections[chat_id].connect() #SE NON CONNESSO ASPETTA LA CONNESSIONE
             if not self._connections[chat_id].is_connected: #SE LA CONNESSIONE FALLISCE LANCIA L'ECCEZIONE
                 logging.warning("Connessione fallita")
                 raise ApplicationHandlerStop
         
-    async def _text_handler(self,update:Update,context:ContextTypes.DEFAULT_TYPE,message:str):
-        pass
+    async def _text_handler(self,update:Update,context:ContextTypes.DEFAULT_TYPE,message:str=None):
+        chat_id = update.effective_chat.id
+        if chat_id not in self._connections:
+            await self._open_connection(update, context)
+        # Send mesage to the cat
+        if message is None:
+            logging.info("OK MESSAGGIO INVIATO")
+            self._connections[chat_id].send(
+                message=update.message.text, 
+                meowgram = {
+                    "update": update.to_json()
+                },)
+            logging.info("OK MESSAGGIO INVIATO")
+        else:
+            self._connections[chat_id].send(
+                message=message, 
+                meowgram = {
+                    "update": update.to_json()
+                },
+        )
     async def run(self):
         try:
             await self.telegram.initialize() #INIZIALIZZAZIONE DEL BOT
@@ -87,7 +105,6 @@ class Telegram:
         while True:
             mex, id = await self._out_queue.get()
             logging.debug(f"Message from {id}: {json.dumps(mex,indent=4)}")
-
             try:
                 if mex['type'] == 'chat':
                     await self._dispatch_chat_message(mex,id)
@@ -98,12 +115,12 @@ class Telegram:
 
     async def _dispatch_chat_message(self,mex,id):
         send_params = mex.get("meowgram", {}).get("send_params", {})
-        
+        logging.debug("DISPATCH")
         await self.bot.send_message(
-            chat_id=id,
-            text=mex['content'],
-            **send_params 
-        )
+                    chat_id=id,
+                    text=mex["content"], 
+                    **send_params
+                )
 
     async def _dispatch_chat_token(self, user_id):
         import time

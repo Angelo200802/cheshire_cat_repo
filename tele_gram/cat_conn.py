@@ -13,9 +13,9 @@ class Connection:
         conf = Config(cc_url,cc_port,id)
         self.cat_client = CatClient(
             config=conf,
-            on_open=self._on_open,
-            on_close=self._on_close,
-            on_message=self._ccat_message_callback
+            on_open=self.on_open,
+            on_close=self.on_close,
+            on_message=self._cat_message_cb
         )
         self.send = self.cat_client.send
         self._stop_waiting_connection = None
