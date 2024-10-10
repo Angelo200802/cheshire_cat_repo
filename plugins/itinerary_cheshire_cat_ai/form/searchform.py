@@ -53,7 +53,9 @@ class ItinerarySearchForm(CatForm):
                     prompt = f"""
                     Il tuo compito è quello di presentare all'utente i risultati della ricerca 
                     presenti nel seguente dizionario {results['hits']} escludendo il campo id e traducendo
-                    il nome dei campi in italiano. Elenca ogni campo e il relativo valore
+                    il nome dei campi in italiano. Elenca ogni campo e il relativo valore nel seguente formato:
+                    **nome_campo** : valore
+                    E' importante inserire una spazio tra il campo e il due punti e tra il due punti e il valore
                     Infine chiedere se i risultati della ricerca vanno bene.
                     """
             except Exception as e:
