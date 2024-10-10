@@ -28,7 +28,8 @@ class ItinerarySearchForm(CatForm):
                       "Fammi vedere gli itinerari disponibili",
                       "Aiutami a trovare un itinerario"]
     stop_examples = ['Ferma la ricerca',
-                     'Stop ricerca']
+                     'Stop ricerca',
+                     'Stop']
     model_class = Itinerary
     service = Service()
     limit = 3

@@ -26,7 +26,8 @@ class ItineraryRegistrationForm(CatForm):
                       "Crea un nuovo itinerario di viaggio",
                       "Salva un nuovo itinerario",]
     stop_examples = ['Stop alla registrazione',
-                     "Ferma la registrazione"]
+                     "Ferma la registrazione",
+                     'Stop']
     model_class = Itinerary
     service = Service()
 
