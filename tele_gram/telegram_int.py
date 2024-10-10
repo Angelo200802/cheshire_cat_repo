@@ -9,7 +9,7 @@ from telegram import Update, Bot
 from telegram.ext import Application, ApplicationBuilder, ApplicationHandlerStop, ContextTypes, CommandHandler, MessageHandler ,filters
 from telegram.constants import ChatAction
 
-from .cat_conn import Connection
+from tele_gram.cat_conn import Connection
 
 #LISTA DI COMANDI
 COMMAND = {
@@ -32,7 +32,7 @@ class Telegram:
         #DIZIONARIO DI CONNESSIONI APERTE
         self._connections : Dict[str,Connection] = {}
         #APPLICAZIONE TELEGRAM
-        self.telegram = ApplicationBuilder().token(token).build()
+        self.telegram : Application = ApplicationBuilder().token(token).build()
         self.bot = self.telegram.bot
         #COMMAND HANDLER => GESTIONE DEI COMANDI INVIATI NELLA CHAT
         self.telegram.add_handler(CommandHandler("help",self.help_command)) #FORNISCE LA LISTA DI COMANDI
