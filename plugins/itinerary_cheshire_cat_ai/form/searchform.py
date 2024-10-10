@@ -11,7 +11,21 @@ class ItinerarySearchForm(CatForm):
     ask_confirm = True
     start_examples = ['Vorrei trovare un itinerario',
                       'Vorrei andare a',
-                      'Vorrei cercare un itinerario']
+                      'Vorrei cercare un itinerario',
+                      "Cerca un percorso per me",
+                      "Mostrami gli itinerari disponibili",
+                      "Trova un itinerario",
+                      "Ho bisogno di un nuovo itinerario",
+                      "Quali sono gli itinerari disponibili",
+                      "Vorrei visualizzare un percorso",
+                      "Mostrami un itinerario",
+                      "Cerca un percorso specifico",
+                      "Mi serve un itinerario per il mio viaggio",
+                      "Come posso trovare un itinerario",
+                      "Visualizza gli itinerari",
+                      "Vorrei sapere quali itinerari ci sono",
+                      "Cerca un percorso di viaggio",
+                      "Fammi vedere gli itinerari disponibili"]
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca']
     model_class = Itinerary

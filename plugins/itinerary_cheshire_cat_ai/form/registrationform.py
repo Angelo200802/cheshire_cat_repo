@@ -10,7 +10,21 @@ class ItineraryRegistrationForm(CatForm):
     ask_confirm = True
     start_examples = ['Vorrei creare il seguente itinerario',
                       'Voglio registrare un itinerario',
-                      'Vorrei creare un itinerario']
+                      'Vorrei creare un itinerario',
+                      "Aggiungi un nuovo itinerario",
+                      "Inserisci un percorso",
+                      "Vorrei creare un itinerario",
+                      "Registra un nuovo itinerario",
+                      "Ho bisogno di salvare un itinerario",
+                      "Voglio aggiungere un percorso",
+                      "Crea un itinerario per me",
+                      "Posso registrare un nuovo percorso",
+                      "Inserisci un nuovo itinerario nel sistema",
+                      "Vorrei aggiungere un itinerario",
+                      "Registra il mio itinerario",
+                      "Aggiungi questo percorso",
+                      "Crea un nuovo itinerario di viaggio",
+                      "Salva un nuovo itinerario",]
     stop_examples = ['Stop alla registrazione',
                      "Ferma la registrazione"]
     model_class = Itinerary
