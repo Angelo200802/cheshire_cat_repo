@@ -35,6 +35,7 @@ class Telegram:
         self.telegram : Application = ApplicationBuilder().token(token).build()
         self.bot : Bot = self.telegram.bot
         #COMMAND HANDLER => GESTIONE DEI COMANDI INVIATI NELLA CHAT
+        self.telegram.add_handler(CommandHandler("start",self.start)) #PRESENTAZIONE DEL BOT
         self.telegram.add_handler(CommandHandler("help",self.help_command)) #FORNISCE LA LISTA DI COMANDI
         self.telegram.add_handler(CommandHandler("search",self.search)) #AVVIA IL FORM DI RICERCA ITINERARI
         self.telegram.add_handler(CommandHandler("sign",self.sign)) #AVVIA IL FORM DI REGISTRAZIONE DI ITINERARI
@@ -42,7 +43,7 @@ class Telegram:
         connect_handler = MessageHandler(filters.ALL, self._open_connection)
         self.telegram.add_handler(connect_handler) #APERTURA DELLA CONNESSIONE SE NON ESISTE
         text_message_handler = MessageHandler(filters.TEXT,self._text_handler)
-        self.telegram.add_handler(text_message_handler) #GESTIONE DEI MESSAGGI DA INOLTRARE AL CHESHIRE CAT
+        self.telegram.add_handler(text_message_handler,group=1) #GESTIONE DEI MESSAGGI DA INOLTRARE AL CHESHIRE CAT
     
         
     async def search(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
@@ -57,7 +58,8 @@ class Telegram:
         for com in COMMAND:
             command_list += f"{com} : {COMMAND[com]}\n"
         await update.message.reply_text(f"Ciao, puoi scegliere tra i seguenti comandi:\n {command_list}")
-    
+    async def start(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text("Ciao, io sono un agente di viaggio! Digitando il comando /help puoi vedere i comandi")
     async def _open_connection(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
 
