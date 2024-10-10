@@ -4,7 +4,6 @@ from .BaseService import BaseService
 import os 
 from cat.log import log
 
-
 class MeiliService(BaseService):
     
     def __init__(self,index:str=None,model_class:BaseModel=None):
