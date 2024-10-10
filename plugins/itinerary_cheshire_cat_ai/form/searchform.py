@@ -25,7 +25,8 @@ class ItinerarySearchForm(CatForm):
                       "Visualizza gli itinerari",
                       "Vorrei sapere quali itinerari ci sono",
                       "Cerca un percorso di viaggio",
-                      "Fammi vedere gli itinerari disponibili"]
+                      "Fammi vedere gli itinerari disponibili",
+                      "Aiutami a trovare un itinerario"]
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca']
     model_class = Itinerary
@@ -47,23 +48,24 @@ class ItinerarySearchForm(CatForm):
             try:
                 results = self.service.search(filter,self.limit)
                 if len(results['hits']) == 0 :
-                    prompt = f"""Il tuo compito è dire all'utente che non è stato trovato alcun risultato in base ai 
-                    parametri da lui impostati."""
+                    prompt = f"""Il tuo compito è dire all'utente che non è stato trovato alcun risultato in base alle informazioni da lui fornite."""
                 else:
                     prompt = f"""
-                    Il tuo compito è quello di dire all'utente che i risultati della ricerca 
-                    sono quelli presenti nel seguente dizionario {results['hits']} escludendo il campo id e traducendo
-                    il nome dei campi in italiano.
+                    Il tuo compito è quello di presentare all'utente i risultati della ricerca 
+                    presenti nel seguente dizionario {results['hits']} escludendo il campo id e traducendo
+                    il nome dei campi in italiano. Elenca ogni campo e il relativo valore
                     Infine chiedere se i risultati della ricerca vanno bene.
                     """
             except Exception as e:
                 log.error(e)
-                prompt = "Il tuo compito è quello di informare l'utente che la ricerca è fallita."    
+                prompt = "Il tuo compito è quello di informare l'utente che la ricerca è fallita per un errore interno, invitalo a riprovare più tardi."    
         elif self._state == CatFormState.INCOMPLETE:
             if len(self._missing_fields) > 0:
                 fields = self._missing_fields[0]
                 log.info(self.model_class.model_fields)
-                prompt = f"""Il tuo compito è quello di chiedere all'utente {self.model_class.model_fields[fields].description}."""
+                prompt = f"""Il tuo compito è quello di formulare una domanda all'utente in base alla seguente descrizione:
+                  {self.model_class.model_fields[fields].description}. Tieni presente che stai aiutando l'utente a cercare un itinerario
+                  dunque formula la domanda in modo pertinente."""
             else:
                 self._state = CatFormState.CLOSED
         if self._state == CatFormState.CLOSED:
@@ -122,9 +124,8 @@ This is the current JSON:
 {json.dumps(self._model, indent=4)}
 ```
 
-This is the conversation:
+This is the conversation, consider only messages where AI search results are not reported:
 {history}
-All dates must be formatted as follows: dd/mm/yy
 Updated JSON:
 """
         prompt_escaped = prompt.replace("{", "{{").replace("}", "}}")

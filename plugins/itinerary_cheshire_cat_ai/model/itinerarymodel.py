@@ -9,7 +9,14 @@ class Categoria(Enum):
     PAESAGGISTICO = "paesaggistico"
     NATURALISTICO = "naturalistico"
     RELIGIOSO = "religioso"
-    STORICO_CULTURALI = "storico culturali"
+    STORICO_CULTURALE = "storico culturale"
+
+class Target(Enum):
+    FAMIGLIA = "famiglia"
+    COPPIA = "coppia"
+    SOLITARIO = "solitario"
+    GRUPPO = "gruppo"
+    PER_TUTTI = "per tutti"
 
 class Step(BaseModel):
     country : str = Field()
@@ -18,23 +25,26 @@ class Step(BaseModel):
     
 
 class Itinerary(BaseModel):
-    title: Optional[str] = Field(description="Titolo dell'itinerario",default="Titolo")
-    step: list[str] = Field(description="Lista di tappe dell'itinerario")
+    step: list[str] = Field(description="Elenco di tappe dell'itinerario")
+    target: Target = Field(description=f"Target a cui è rivolto l'itinerario, i possibili valori sono {[tg for tg in Target]}")
     category: Categoria = Field(description=f"la categoria dell'itinerario, i possibili valori sono {[cat for cat in Categoria]}")
-    link: str = Field(description="link del sito a cui accedere per vedere l'itinerario")
+    title: str = Field(description="Titolo dell'itinerario")
+    link: Optional[str] = Field(description="link del sito a cui accedere per vedere l'itinerario",default="")
     info : Optional[str] = Field(description="Informazioni del viaggio",default="Nessuna informazione disponibile")
 
     #@field_validator('link')
     #def check_link(cls, l):
+    #    if l == "":
+    #        return l
     #    try:
     #        res = requests.head(l)
     #        return l
     #    except requests.RequestException as e:
     #        log.error(f"ERRORE = {e}")
-    #        raise ValueError("Il link specificato non è valido")
+    #        raise ValueError("Il link da te inserito non è valido")
 
     @field_validator('category')
     def check_category(cls,c):
         if not c in Categoria:
-            raise ValueError("La categoria non è valida.")
+            raise ValueError("La categoria da te inserita non è valida.")
         return c
