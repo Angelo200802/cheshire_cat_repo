@@ -51,8 +51,12 @@ class Telegram:
     async def sign(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
         await self._text_handler(update,context,"Vorrei cercare un itinerario")
 
-    async def help_command(self,update:Update,contex:ContextTypes.DEFAULT_TYPE):
-        pass
+    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Send a message when the command /help is issued."""
+        command_list = ""
+        for com in COMMAND:
+            command_list += f"{com} : {COMMAND[com]}\n"
+        await update.message.reply_text(f"Ciao, puoi scegliere tra i seguenti comandi:\n {command_list}")
     
     async def _open_connection(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
