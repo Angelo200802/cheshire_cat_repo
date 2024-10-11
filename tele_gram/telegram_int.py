@@ -5,7 +5,7 @@ import json
 
 from typing import Dict
 
-from telegram import Update, Bot
+from telegram import Update, Bot, ReplyKeyboardMarkup
 from telegram.ext import Application, ApplicationBuilder, ApplicationHandlerStop, ContextTypes, CommandHandler, MessageHandler ,filters
 from telegram.constants import ChatAction
 
@@ -35,6 +35,7 @@ class Telegram:
         self.telegram : Application = ApplicationBuilder().token(token).build()
         self.bot : Bot = self.telegram.bot
         #COMMAND HANDLER => GESTIONE DEI COMANDI INVIATI NELLA CHAT
+        self.telegram.add_handler(CommandHandler("stop",self.stop))
         self.telegram.add_handler(CommandHandler("start",self.start)) #PRESENTAZIONE DEL BOT
         self.telegram.add_handler(CommandHandler("help",self.help_command)) #FORNISCE LA LISTA DI COMANDI
         self.telegram.add_handler(CommandHandler("search",self.search)) #AVVIA IL FORM DI RICERCA ITINERARI
@@ -45,12 +46,14 @@ class Telegram:
         text_message_handler = MessageHandler(filters.TEXT,self._text_handler)
         self.telegram.add_handler(text_message_handler,group=1) #GESTIONE DEI MESSAGGI DA INOLTRARE AL CHESHIRE CAT
     
-        
+    async def stop(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
+        self.send(update,update.effective_chat.id,"stop")
+
     async def search(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
-        await self._text_handler(update,context,"Vorrei trovare un itinerario")
+        self.send(update,update.effective_chat.id,"Vorrei trovare un itinerario")
 
     async def sign(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
-        await self._text_handler(update,context,"Vorrei cercare un itinerario")
+        self.send(update,update.effective_chat.id,"Vorrei registrare un itinerario")
 
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Send a message when the command /help is issued."""
@@ -58,8 +61,12 @@ class Telegram:
         for com in COMMAND:
             command_list += f"{com} : {COMMAND[com]}\n"
         await update.message.reply_text(f"Ciao, puoi scegliere tra i seguenti comandi:\n {command_list}")
+    
     async def start(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("Ciao, io sono un agente di viaggio! Digitando il comando /help puoi vedere i comandi")
+        keyboard = [["Vorrei registrare un itinerario"],["Vorrei cercare un itinerario"],["Stop"]]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+        await update.message.reply_text("Ciao, io sono un agente di viaggio! Chiedimi pure tutto quello che vuoi", reply_markup=reply_markup)
+    
     async def _open_connection(self,update:Update,context:ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
 
@@ -78,20 +85,12 @@ class Telegram:
             await self._open_connection(update, context)
         # Send mesage to the cat
         if message is None:
+            if update.message.text[0] == '/':
+                logging.info("OK MESSAGGIO NON INVIATO")
+                return
             logging.info("OK MESSAGGIO INVIATO")
-            self._connections[chat_id].send(
-                message=update.message.text, 
-                meowgram = {
-                    "update": update.to_json()
-                },)
-            logging.info("OK MESSAGGIO INVIATO")
-        else:
-            self._connections[chat_id].send(
-                message=message, 
-                meowgram = {
-                    "update": update.to_json()
-                },
-        )
+            self.send(update,chat_id,update.message.text)
+        
     async def run(self):
         try:
             await self.telegram.initialize() #INIZIALIZZAZIONE DEL BOT
@@ -138,3 +137,10 @@ class Telegram:
                 chat_id=user_id,
                 action=ChatAction.TYPING
             )
+
+    def send(self,update:Update,chat_id,mex):
+        self._connections[chat_id].send(
+                message=mex, 
+                meowgram = {
+                    "update": update.to_json()
+                },)
