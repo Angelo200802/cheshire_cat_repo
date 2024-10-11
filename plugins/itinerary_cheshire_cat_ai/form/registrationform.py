@@ -3,6 +3,7 @@ from cat.log import log
 from ..service.service import Service
 from ..model.itinerarymodel import Itinerary
 from pydantic import ValidationError
+import json
 
 @form
 class ItineraryRegistrationForm(CatForm):
@@ -30,6 +31,10 @@ class ItineraryRegistrationForm(CatForm):
                      'Stop']
     model_class = Itinerary
     service = Service()
+
+    def __init__(self,cat):
+        super().__init__(cat)
+        self.last_message = len(self.cat.working_memory.history)-1
 
     def submit(self,form_model):
         prompt = ""
@@ -88,3 +93,33 @@ class ItineraryRegistrationForm(CatForm):
 
         return model
     
+    def extraction_prompt(self):
+        history = []
+        memory = self.cat.working_memory.history
+        for mex in memory[self.last_message:]:
+            history.append(mex['message'])
+        JSON_structure = "{"
+        for field_name, field in self.model_class.model_fields.items():
+            if field.description:
+                description = field.description
+            else:
+                description = ""
+            JSON_structure += f'\n\t"{field_name}": // {description} Must be of type `{field.annotation.__name__}` or `null`'  
+        JSON_structure += "\n}"
+        prompt = f"""Your task is to fill up a JSON out of a conversation.
+The JSON must have this format:
+```json
+{JSON_structure}
+```
+
+This is the current JSON:
+```json
+{json.dumps(self._model, indent=4)}
+```
+
+This is the conversation:
+{history}
+Updated JSON:
+"""
+        prompt_escaped = prompt.replace("{", "{{").replace("}", "}}")
+        return prompt_escaped

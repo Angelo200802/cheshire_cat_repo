@@ -16,7 +16,6 @@ class ItinerarySearchForm(CatForm):
                       "Mostrami gli itinerari disponibili",
                       "Trova un itinerario",
                       "Ho bisogno di un nuovo itinerario",
-                      "Quali sono gli itinerari disponibili",
                       "Vorrei visualizzare un percorso",
                       "Mostrami un itinerario",
                       "Cerca un percorso specifico",
@@ -33,6 +32,11 @@ class ItinerarySearchForm(CatForm):
     model_class = Itinerary
     service = Service()
     limit = 3
+
+    def __init__(self,cat):
+        super().__init__(cat)
+        self.last_message = len(self.cat.working_memory.history)-1
+        
 
     def submit(self,form_model):
         prompt = """Il tuo compito è ringraziare l'utente per averti usato"""
@@ -106,8 +110,11 @@ class ItinerarySearchForm(CatForm):
         return self.message()
     
     def extraction_prompt(self):
-        history = self.cat.working_memory.history
-        history = [mex['message'] for mex in history if (mex['who'] == 'Human') or ('risultati' not in mex['message'] and mex['who'] == 'AI')]
+        history = []
+        memory = self.cat.working_memory.history
+        for mex in memory[self.last_message:]:
+            if mex['who'] == 'Human' or ('risultati' not in mex['message'].lower() and mex['who'] == 'AI'):
+                history.append(mex['message'])
         JSON_structure = "{"
         for field_name, field in self.model_class.model_fields.items():
             if field.description:
