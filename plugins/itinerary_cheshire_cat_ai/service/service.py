@@ -1,13 +1,11 @@
 from .BaseService import BaseService
-from .meili import MeiliService
-from ..model.itinerarymodel import Itinerary
-
+from ..utility import load_service
 class Service:
 
     service : BaseService 
 
     def __init__(self):
-        self.service = MeiliService('itinerary',Itinerary)
+        self.service = load_service()
 
     def save(self,form_model):
         return self.service.save(form_model)

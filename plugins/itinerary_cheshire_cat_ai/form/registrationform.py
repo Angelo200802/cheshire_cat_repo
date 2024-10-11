@@ -1,8 +1,8 @@
 from cat.experimental.form import form, CatForm, CatFormState 
 from cat.log import log
 from ..service.service import Service
-from ..model.itinerarymodel import Itinerary
-from pydantic import ValidationError
+from ..utility import load_model
+from pydantic import ValidationError, BaseModel
 import json
 
 @form
@@ -29,7 +29,7 @@ class ItineraryRegistrationForm(CatForm):
     stop_examples = ['Stop alla registrazione',
                      "Ferma la registrazione",
                      'Stop']
-    model_class = Itinerary
+    model_class : BaseModel = load_model()
     service = Service()
 
     def __init__(self,cat):

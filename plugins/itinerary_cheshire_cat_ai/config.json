@@ -1,0 +1,9 @@
+{
+    "service_class" : "MeiliService",
+    "service_param" : {
+        "index" : "itinerary"
+    },
+    "service_module" : "service.meili",
+    "model_class" : "Itinerary",
+    "model_module" : "model.itinerarymodel"
+}
