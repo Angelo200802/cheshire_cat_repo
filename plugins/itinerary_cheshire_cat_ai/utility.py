@@ -24,8 +24,8 @@ else:
 def load_service() -> BaseService:
     module = importlib.import_module(config['service_module'])
     service = config['service_class']
-    param = config.get('param',{})
-    model = get_model()
+    param = config.get('service_param',{})
+    model = load_model()
     service_class = getattr(module,service)
     param['model_class'] = model
     return service_class(**param)
