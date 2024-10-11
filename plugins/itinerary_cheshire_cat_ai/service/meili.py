@@ -8,14 +8,14 @@ class MeiliService(BaseService):
     
     def __init__(self,index:str=None,model_class:BaseModel=None):
         self.MEILISEARCH_URL = "http://meilisearch:7700"
-        self.MEILISEARCH_MASTER_KEY = 'A6Tw7yTI37T4Rx5NINnoG2ScZssgy911qaDvSbx7oyY'
+        self.MEILISEARCH_MASTER_KEY = 'apWWcxJCQ0Jx-Eq59mh55ePhvoIlU9QIcz8ESK27nyM'
         self.client = meilisearch.Client(self.MEILISEARCH_URL, self.MEILISEARCH_MASTER_KEY)
         if index is None or model_class is None:
             return
         self.index = index
         if index not in self.client.get_indexes()['results']:
             self.client.create_index(index)
-        self.client.index(index).update_filterable_attributes([field_name for field_name, field in model_class.__fields__.items()])
+            self.client.index(index).update_filterable_attributes([field_name for field_name, field in model_class.__fields__.items()])
     
     def save(self,form_model) -> bool:
         try:
