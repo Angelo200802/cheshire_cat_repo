@@ -13,14 +13,11 @@ import json
 import importlib
 import os 
 
-config_path = "/home/angelo/progetto/plugins/itinerary_cheshire_cat_ai/config.json"
+#config_path = "/home/angelo/progetto/plugins/itinerary_cheshire_cat_ai/config.json"
 config = {}
-with open(config_path, 'r') as file:
-        config = json.load(file)
-if not os.path.exists(config_path):
-    print(f"Errore: il file di configurazione non esiste in {config_path}")
-else:
-     log.info("OK PATH TROVATO")
+#with open(config_path, 'r') as file:
+#        config = json.load(file)
+
 def load_service() -> BaseService:
     module = importlib.import_module(config['service_module'])
     service = config['service_class']
