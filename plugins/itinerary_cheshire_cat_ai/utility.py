@@ -13,10 +13,11 @@ import json
 import importlib
 import os 
 
-#config_path = "/home/angelo/progetto/plugins/itinerary_cheshire_cat_ai/config.json"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, "config.json")
 config = {}
-#with open(config_path, 'r') as file:
-#        config = json.load(file)
+with open(config_path, 'r') as file:
+        config = json.load(file)
 
 def load_service() -> BaseService:
     module = importlib.import_module(config['service_module'])

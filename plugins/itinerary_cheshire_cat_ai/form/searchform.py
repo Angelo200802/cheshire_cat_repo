@@ -3,8 +3,8 @@ from ..service.service import Service
 from pydantic import ValidationError, BaseModel
 from cat.log import log
 import json 
-#from ..utility import load_model
-from ..model.itinerarymodel import Itinerary
+from ..utility import load_model
+#from ..model.itinerarymodel import Itinerary
 
 @form 
 class ItinerarySearchForm(CatForm):
@@ -30,8 +30,8 @@ class ItinerarySearchForm(CatForm):
     stop_examples = ['Ferma la ricerca',
                      'Stop ricerca',
                      'Stop']
-    #model_class : BaseModel = load_model()
-    model_class : BaseModel = Itinerary
+    model_class : BaseModel = load_model()
+    #model_class : BaseModel = Itinerary
     service = Service()
     limit = 3
 

@@ -3,7 +3,7 @@
     "service_param" : {
         "index" : "itinerary"
     },
-    "service_module" : "service.meili",
+    "service_module" : "cat.plugins.itinerary_cheshire_cat_ai.service.meili",
     "model_class" : "Itinerary",
-    "model_module" : "model.itinerarymodel"
+    "model_module" : "cat.plugins.itinerary_cheshire_cat_ai.model.itinerarymodel"
 }
