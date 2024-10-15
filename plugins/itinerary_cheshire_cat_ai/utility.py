@@ -1,7 +1,8 @@
-from cat.mad_hatter.decorators import hook
+from cat.mad_hatter.decorators import hook,tool
 from .service.BaseService import BaseService
 from pydantic import BaseModel
 from cat.log import log
+import dataclasses 
 
 @hook
 def agent_prompt_prefix(prefix,cat):
@@ -32,3 +33,18 @@ def load_model() -> BaseModel:
     module = importlib.import_module(config['model_module'])
     model = config['model_class']
     return getattr(module,model)
+
+from automat import TypeMachine
+
+def method_state() -> dict:
+     """"""
+     return{
+          
+     }
+
+def get_machine(cat) -> TypeMachine:
+    """"""
+    getter_import = importlib.import_module(config['machine_getter_module'])
+    getter = config['machine_getter']
+    fun = getattr(getter_import,getter)
+    return fun(cat)

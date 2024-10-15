@@ -5,5 +5,10 @@
     },
     "service_module" : "cat.plugins.itinerary_cheshire_cat_ai.service.meili",
     "model_class" : "Itinerary",
-    "model_module" : "cat.plugins.itinerary_cheshire_cat_ai.model.itinerarymodel"
+    "model_module" : "cat.plugins.itinerary_cheshire_cat_ai.model.itinerarymodel",
+    "machine_getter":"get_machine",
+    "machine_getter_module" : "cat.plugins.itinerary_cheshire_cat_ai.finit_state_machine.state_machine",
+    "method_machine" : {
+
+    }
 }

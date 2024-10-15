@@ -6,7 +6,7 @@ import json
 from ..utility import load_model
 #from ..model.itinerarymodel import Itinerary
 
-@form 
+@form
 class ItinerarySearchForm(CatForm):
     description = "Form di ricerca di un itinerario"
     ask_confirm = True
@@ -43,6 +43,7 @@ class ItinerarySearchForm(CatForm):
     def submit(self,form_model):
         prompt = """Il tuo compito è ringraziare l'utente per averti usato"""
         out = self.cat.llm(prompt)
+        out = {}
         return {'output':out}
         
     def message(self):

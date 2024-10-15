@@ -6,7 +6,7 @@ from ..utility import load_model
 from pydantic import ValidationError, BaseModel
 import json
 
-@form
+#@form
 class ItineraryRegistrationForm(CatForm):
     description = "Form di registrazione di un itinerario"
     ask_confirm = True
