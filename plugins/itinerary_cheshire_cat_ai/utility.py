@@ -42,7 +42,7 @@ def method_state() -> dict:
           
      }
 
-def get_machine(cat) -> TypeMachine:
+def get_machine(cat):
     """"""
     getter_import = importlib.import_module(config['machine_getter_module'])
     getter = config['machine_getter']

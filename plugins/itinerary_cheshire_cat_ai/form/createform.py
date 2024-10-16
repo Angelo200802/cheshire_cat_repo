@@ -13,7 +13,15 @@ class CreateItineraryForm(CatForm):
         super().__init__(cat)
         self.proxy = ChatbotProxy(cat)
     
+    def submit(self):
+        prompt = """Ringrazia l'utente e invitalo a chiederti ulteriori cose"""
+        out = self.cat.llm(prompt)
+        return {"output":out}
+    
     def next(self):
-        return self.proxy.next()
+        out = self.proxy.next()
+        if self.proxy.get_cur_state() == self.proxy.get_final_state():
+            return self.submit()
+        return out
         
 

@@ -6,7 +6,7 @@ import json
 from ..utility import load_model
 #from ..model.itinerarymodel import Itinerary
 
-@form
+#@form
 class ItinerarySearchForm(CatForm):
     description = "Form di ricerca di un itinerario"
     ask_confirm = True
