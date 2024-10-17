@@ -1,9 +1,9 @@
 {
-    "service_class" : "MeiliService",
+    "service_class" : "VectorMeiliService",
     "service_param" : {
-        "index" : "itinerary"
+        "index" : "langchain_demo"
     },
-    "service_module" : "cat.plugins.itinerary_cheshire_cat_ai.service.meili",
+    "service_module" : "cat.plugins.itinerary_cheshire_cat_ai.service.vector_meili",
     "model_class" : "Itinerary",
     "model_module" : "cat.plugins.itinerary_cheshire_cat_ai.model.itinerarymodel",
     "machine_getter":"get_machine",

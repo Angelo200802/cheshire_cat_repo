@@ -13,6 +13,7 @@ class AutomatMachine(Automa):
                             'ask_step' : self.machine.ask_step ,
                             'wait_conf_adv': self.machine.wait_confirm_advice ,
                             'confirm' : self.machine.confirm_result ,
+                            'step_ok' : self.machine.step_ok,
                             'closed' : self.machine.closed }
         self.cur_state = next(iter(self.method_state)) #Bisogna mettere il primo stato come primo elemento del dizionario
         last_state = next(reversed(self.method_state))
@@ -25,7 +26,9 @@ class AutomatMachine(Automa):
             if "callback" in out:
                 out = out["callback"]()
             if 'next_state' in out: #bisogna aggiungere next_state per impostare il prossimo stato
+                print(f"Passo dallo stato {self.cur_state}")
                 self.cur_state = out['next_state']
+                print(f"A {self.cur_state}")
                 out.pop('next_state',None) #per richiamare il prossimo metodo devo conoscere lo stato
             return out
         else:

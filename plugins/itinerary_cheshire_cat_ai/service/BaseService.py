@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 class BaseService(ABC):
 
     @abstractmethod
-    def save(self,form_model) -> bool:
+    def save(self,form_model:dict) -> bool:
         """Salva file da qualche parte."""
         pass
 

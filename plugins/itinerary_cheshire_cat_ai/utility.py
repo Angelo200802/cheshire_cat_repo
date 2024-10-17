@@ -24,17 +24,13 @@ def load_service() -> BaseService:
     module = importlib.import_module(config['service_module'])
     service = config['service_class']
     param = config.get('service_param',{})
-    model = load_model()
     service_class = getattr(module,service)
-    param['model_class'] = model
     return service_class(**param)
 
 def load_model() -> BaseModel:    
     module = importlib.import_module(config['model_module'])
     model = config['model_class']
     return getattr(module,model)
-
-from automat import TypeMachine
 
 def method_state() -> dict:
      """"""
