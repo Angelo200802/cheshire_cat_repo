@@ -1,7 +1,8 @@
 from automat import TypeMachine
 from ..utility import method_state, get_machine
+from .automa import Automa
 
-class ChatbotProxy:
+class AutomatMachine(Automa):
 
     def __init__(self,cat):
         self.machine : TypeMachine = get_machine(cat)
@@ -17,7 +18,7 @@ class ChatbotProxy:
         last_state = next(reversed(self.method_state))
         self.final_state = self.method_state[last_state]
     
-    def next(self) -> dict:
+    def execute_transition(self) -> dict:
         print(f"CURRENT STATE = {self.cur_state}, function = {self.method_state[self.cur_state]}")
         if self.cur_state in self.method_state:
             out = self.method_state[self.cur_state]()

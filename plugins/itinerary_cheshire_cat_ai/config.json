@@ -10,5 +10,7 @@
     "machine_getter_module" : "cat.plugins.itinerary_cheshire_cat_ai.finit_state_machine.state_machine",
     "method_machine" : {
 
-    }
+    },
+    "automa_module":"cat.plugins.itinerary_cheshire_cat_ai.finit_state_machine.chatbot_state_machine",
+    "automa_class" : "AutomatMachine"
 }

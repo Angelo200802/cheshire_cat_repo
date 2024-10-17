@@ -48,3 +48,11 @@ def get_machine(cat):
     getter = config['machine_getter']
     fun = getattr(getter_import,getter)
     return fun(cat)
+
+from .finit_state_machine.automa import Automa
+
+def get_automa(cat) -> Automa:
+    module = importlib.import_module(config['automa_module'])
+    classe = config['automa_class']
+    automa = getattr(module,classe)
+    return automa(cat)

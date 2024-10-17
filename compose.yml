@@ -12,12 +12,13 @@ services:
       - ./data:/app/cat/data
   
   meilisearch:
-    image: getmeili/meilisearch:v1.10
+    image: getmeili/meilisearch:latest
     container_name: meilisearch
     ports:
       - "7700:7700"
     environment:
       MEILI_MASTER_KEY: '${MEILISEARCH_MASTER_KEY}'
+      MEILI_EXPERIMENTAL_VECTOR_STORE: 'true'
     volumes:
       - ./meili_data:/meili_data
     restart: unless-stopped

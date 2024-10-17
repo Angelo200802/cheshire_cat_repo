@@ -1,5 +1,6 @@
 from cat.experimental.form import form, CatForm
-from ..finit_state_machine.chatbot_proxy import ChatbotProxy
+from ..utility import get_automa
+from ..finit_state_machine.automa import Automa
 
 @form
 class CreateItineraryForm(CatForm):
@@ -7,21 +8,22 @@ class CreateItineraryForm(CatForm):
     start_examples = ['Voglio creare un itinerario','Aggiungi al mio itinerario le seguenti tappe','Dammi un suggerimento per un itinerario']
     stop_examples = []
 
-    proxy : ChatbotProxy 
+    state_machine : Automa 
 
     def __init__(self,cat):
         super().__init__(cat)
-        self.proxy = ChatbotProxy(cat)
+        self.state_machine = get_automa(cat)
+        
     
-    def submit(self):
+    def submit(self,model):
         prompt = """Ringrazia l'utente e invitalo a chiederti ulteriori cose"""
         out = self.cat.llm(prompt)
         return {"output":out}
     
     def next(self):
-        out = self.proxy.next()
-        if self.proxy.get_cur_state() == self.proxy.get_final_state():
-            return self.submit()
+        out = self.state_machine.execute_transition()
+        if self.state_machine.get_cur_state() == self.state_machine.get_final_state():
+            return self.submit({})
         return out
         
 
