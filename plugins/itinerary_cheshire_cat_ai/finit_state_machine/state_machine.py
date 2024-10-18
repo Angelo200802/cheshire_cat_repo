@@ -44,30 +44,18 @@ closed = builder.state("closed")
 def init_method(controller: ChatBotController,devices:CatDevices) -> dict:
     history = devices.cat.working_memory.history
     user_message = history[len(history)-1]['message']
-    example_label = {
-        "advice" : ["Dammi qualche suggerimento per un itinerario","Hai qualche proposta per un viaggio?",
-                    "Mi daresti qualche idea per un percorso da seguire?","Quali luoghi mi consiglieresti di visitare?",
-                    "suggeriscimi un itinerario","Puoi consigliarmi un itinerario?",
-                    "Vorrei sapere se hai suggerimenti per un itinerario interessante","Puoi suggerirmi un percorso da esplorare?",
-                    "Hai qualche raccomandazione per un itinerario?","Mi servirebbero consigli su dove andare durante il viaggio",
-                    "Quali attrazioni dovrei includere nel mio itinerario?"],
-        "ask" : ["Vorrei creare un itinerario","Mi piacerebbe pianificare un itinerario.","Ho intenzione di organizzare un percorso di viaggio.",
-                "Voglio mettere insieme un itinerario.","Desidero strutturare un itinerario.","Sto pensando di creare un percorso di viaggio.",
-                "Vorrei progettare un itinerario.","Mi interessa elaborare un itinerario.","Voglio definire un percorso per il mio viaggio.",
-                "Ho bisogno di preparare un itinerario.","Sto cercando di costruire un percorso di viaggio."],
-        "telling" : ["Organizza un itinerario utilizzando queste tappe.","Pianifica un percorso considerando le seguenti destinazioni."
-                    "Metti insieme un itinerario partendo da queste tappe.","Sviluppa un itinerario basato sui luoghi indicati."
-                    ,"Costruisci un percorso utilizzando le seguenti tappe.","Elabora un itinerario tenendo conto di queste destinazioni.",
-                    "Progetta un percorso seguendo le tappe elencate.","Imposta un itinerario considerando le seguenti località.",
-                    "Definisci un percorso basato su queste tappe.","Crea un tragitto seguendo le destinazioni indicate."],
-    }
-    classe = classify(devices.cat,user_message,example_label)
-    print(f"classe = {classe}")
-    if classe == "advice" or classe == "telling":
-        if classe == "telling":
-            okay = verify_destination_is_present(devices.cat)
-            if not okay:
-                return {"callback": controller.ask_step}
+    prompt = f"""Considera il seguente messaggio : "{user_message}.
+    Restituisci un json nel seguente formato:
+    {{ 
+        "label": valore 
+    }} Dove valore è uno delle seguenti etichette:
+    "adv" se nel messaggio viene chiesto un suggerimento su un itinerario, 
+    "step" se nel messaggio si chiede di creare un itinerario basato su delle tappe,
+    "ask" se il messaggio non specifica un suggerimento oppure se non sono presenti tappe specificate."""
+    classe = get_json(devices.cat,prompt)['label']
+    if classe == "adv" or classe == "step":
+        if classe == "step" and not verify_destination_is_present(devices.cat):
+            return {"callback": controller.ask_step}
         return {"callback" : controller.tell_advice}
     else:
         return {"callback" : controller.ask_advice}
@@ -83,102 +71,106 @@ def ask_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
 @init.upon(ChatBotController.tell_advice).to(confirm)
 @wait_conf_adv.upon(ChatBotController.tell_advice).to(confirm)
 @confirm.upon(ChatBotController.tell_advice).to(confirm)
+@step_ok.upon(ChatBotController.tell_advice).to(confirm)
 def tell_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = f"""Converti il seguente dialogo: {devices.cat.working_memory.history} in un json con il seguente formato:
         {{
-            destinazioni : {{ index : nome_destinazione}}
+            destinazioni : {{ index : nome_destinazione }}
         }}
         Dunque estrai le destinazioni dalla conversazione, se nessuna destinazione viene specificata la lista deve
         essere vuota.
     """
-    dest : str = devices.cat.llm(prompt)
-    i = dest.index('{')
-    f = dest[::-1].index("}")
-    dest = dest[i:len(dest)-f]
-    print(f"DEST = {dest}")
-    dest = json.loads(dest)
+    dest = get_json(devices.cat,prompt)
+    prompt = f"""Il tuo compito è dire all'utente che stai per presentare un itinerario"""
+    mex = devices.cat.llm(prompt)
     if len(dest['destinazioni']) == 0:
-        #Cerca le destinazioni migliori e correlate e presentale
+        #Cerca le destinazioni migliori e presentale
         results = service.search('',5)
-        prompt = f"""Il tuo compito è presentare le seguenti località: {results}. Chiedere se l'itinerario fornito va bene"""
     else:
         query = ""#crea la query in base alle destinazioni
         results = service.search(query,5)
-        prompt = f"""Il tuo compito è presentare le seguenti località : {results}.
-    Chiedere se i suggerimenti forniti vanno bene"""
-    out = devices.cat.llm(prompt)
+    out = f"""{{ "mex" : "{mex}" , "results":{results} }}"""
     return {"output":out,"next_state" : confirm.name}
 
 @wait_conf_adv.upon(ChatBotController.wait_confirm_advice).loop()
 def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
-    #estrazione della risposta dell'utente
     history = devices.cat.working_memory.history
     user_message = history[len(history)-1]['message']
-    example_label = {
-        "advice" : ["Vorrei un suggerimento","Vorrei un suggerimento basato sulle seguenti città"],
-        "initial_dest" : ["No","Non voglio suggerimenti"],
-        "exit" : stop_examples
-    }
-    classe = devices.cat.classify(user_message,labels=example_label)
-    print(f"CLASS = {classe}")
-    if classe == "initial_dest":
-        return {"callback":controller.ask_step}
-    elif classe == "advice":
+    prompt = f"""Considera il seguente messaggio : {user_message}.
+    Restituisci un json con il seguente formato: 
+    {{
+        "label" : valore
+    }}
+    Dove valore è una delle seguenti etichette:
+    "adv" se nel messaggio si sta chiedendo un suggerimento,
+    "exit" se il messaggio è simile uno dei seguenti valori : {stop_examples},
+    "dest" se nel messaggio viene detto che si vuole basare l'itinerario su delle tappe
+    """
+    classe = get_json(devices.cat,prompt)['label']
+    if classe == "adv" or classe == "dest":
+        if classe == "dest" and not verify_destination_is_present(devices.cat):
+            return {"callback" : controller.ask_step}
         return {"callback":controller.tell_advice}
     else:
         return {"callback" : controller.closed}
 
 @wait_conf_adv.upon(ChatBotController.ask_step).to(step_ok)
-@init.upon(ChatBotController.ask_step).to(step_ok)
 @confirm.upon(ChatBotController.ask_step).to(step_ok)
+@init.upon(ChatBotController.ask_step).to(step_ok)
 def ask_step_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = """Chiedi all'utente quali destinazioni desidera avere nel suo itinerario"""
     out = devices.cat.llm(prompt)
-    print(step_ok.name)
-    return {"output": out, "next_step" : step_ok.name}
+    return {"output": out, "next_state" : step_ok.name}
 
 @step_ok.upon(ChatBotController.step_ok).loop()
 def step_ok_method(controller:ChatBotController,devices:CatDevices) -> dict:
     history = devices.cat.working_memory.history
     user_message = history[len(history)-1]['message']
-    example_label = {
-        "exit" : stop_examples
-    }
-    classe = classify(devices.cat,user_message,example_label)
-    print(f"classe = {classe}")
+    prompt = f"""Considera il seguente messaggio : {user_message}.
+    Restituisci un json nel seguente formato:
+    {{
+        "label" : valore
+    }}
+    Dove valore è uno delle seguenti etichette:
+    "exit" se il messaggio è simile a uno dei valori presenti nella seguente lista: {stop_examples},
+    "adv" se nel messaggio si sta chiedendo un suggerimento,
+    "step" se nel messaggio si fa riferimento ad un elenco di tappe/destinazioni di un itinerario
+    """ 
+    classe = get_json(devices.cat,prompt)['label']
     if classe == "exit":
-        return {"callback" : controller.closed}
-    okay = verify_destination_is_present(devices.cat)
-    if okay :
-        return {"callback":controller.tell_advice}
-    else:
-        return {"callback" : controller.ask_step }
+        return {"callback" : controller.closed }
+    elif classe == "adv":
+        return { "callback" : controller.tell_advice }
+    else :
+        if not verify_destination_is_present(devices.cat):
+            return {"callback" : controller.ask_step}
+        return {"callback" : controller.tell_advice}
+    
 
 @confirm.upon(ChatBotController.confirm_result).loop()
 def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> dict:
     #estrai dall'ultimo messaggio se l'utente conferma i risultati
     history = devices.cat.working_memory.history
     user_message = history[len(history)-1]['message']
-    example_label = {
-        "closed" : ["si confermo","si","okay","va bene"],
-        "tell" : ["No, vorrei altri consigli.","No, fammi altre proposte.","No, suggeriscimi qualcos'altro",
-                "No, dammi qualche altro consiglio.","No, preferisco altre opzioni.","No, mostrami altri suggerimenti.",
-                "No, vorrei più alternative.","No, ho bisogno di altri spunti.","No, proponi qualcos'altro.","No, suggerisci altre idee.",
-                "No, considera le seguenti tappe.","No, utilizza queste destinazioni come riferimento.","No, basati su queste località.",
-                "No, tieni conto delle tappe indicate.","No, prendi in considerazione questi luoghi.","No, segui queste destinazioni.",
-                "No, usa queste tappe come base.","No, parti dalle località elencate.","No, organizza il tutto seguendo queste tappe.",
-                "No, concentrati sulle seguenti destinazioni."],
-        "ask" : ["No","non vanno bene"],
-        "exit" : stop_examples
-    }
-    classe = classify(devices.cat,user_message,example_label)
-    print(f"CLASS = {classe}")
-    if classe == "tell" :
-        return {"callback":controller.tell_advice}
-    elif classe == "ask" :
-        return {"callback" : controller.ask_advice}
-    else:
-        return {"callback":controller.closed}
+    prompt = f"""Considera il seguente messaggio: {user_message}.
+    Restituisci un json nel seguente formato:
+    {{  
+        "label" : valore
+    }}
+    Dove valore è una delle seguenti etichette:
+    "close" se il messaggio è positivo come "si va bene",
+    "exit" se il messaggio è simile ad uno dei valori della seguente lista : {stop_examples},
+    "step" se il messaggio fa riferimento a delle tappe/destinazioni di un itinerario,
+    "adv" se il messaggio è negativo e/o viene chiesto un altro suggerimento
+    """
+    classe = get_json(devices.cat,prompt)['label']
+    if classe == "exit" or classe == "close":
+        return {"callback" : controller.closed }
+    elif classe == "step":
+        if not verify_destination_is_present(devices.cat):
+            return {"callback" : controller.ask_step}
+    return {"callback" : controller.tell_advice }
+    
 
 @confirm.upon(ChatBotController.closed).to(closed)
 @init.upon(ChatBotController.closed).to(closed)
@@ -192,8 +184,9 @@ def closed_method(controller:ChatBotController,devices:CatDevices) -> dict:
 def verify_destination_is_present(cat) -> bool:
     history = cat.working_memory.history
     mex = history[len(history)-1]['message']
-    prompt = f"""Considera il seguente messaggio: {mex}. Rispondi con true se il messaggio contiene un elenco con almeno una
-            destinazione, false altrimenti"""
+    prompt = f"""Considera il seguente messaggio: "{mex}". 
+            Restituisci un json con la seguente struttura: {{ "present" : true se è presente almeno una località, false altrimenti }}    
+            """
     step = cat.llm(prompt)
     return 'true' in step.lower()
 
@@ -202,34 +195,10 @@ machineFactory = builder.build()
 def get_machine(cat) -> TypeMachine:
     return machineFactory(CatDevices(cat))
 
-def classify(cat,mex,label) -> str:
-    if isinstance(label, dict):
-            labels_names = label.keys()
-            examples_list = "\n\nExamples:"
-            for label, examples in label.items():
-                for ex in examples:
-                    examples_list += f'\n"{ex}" -> "{label}"'
-    else:
-        labels_names = label
-        examples_list = ""
-
-    labels_list = '"' + '", "'.join(labels_names) + '"'
-
-    prompt = f"""Classify this sentence:
-"{mex}"
-
-Allowed classes are:
-{labels_list}{examples_list}
-
-Return a json with this format:
-{{ "label" : label assigned to the sentence}}
-"""
-
-    response = cat.llm(prompt)
-    i = response.index('{')
+def get_json(cat,prompt):
+    response:str = cat.llm(prompt)
+    i = response.index("{")
     f = response[::-1].index("}")
-    response = response[i:len(response)-f]
-    response_json = json.loads(response)
-    return response_json["label"]
+    return json.loads(response[i:len(response)-f])
     
 

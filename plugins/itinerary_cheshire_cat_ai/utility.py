@@ -1,5 +1,5 @@
 from cat.mad_hatter.decorators import hook,tool
-from .service.BaseService import BaseService
+from .service.baseservice import BaseService
 from pydantic import BaseModel
 from cat.log import log
 import dataclasses 

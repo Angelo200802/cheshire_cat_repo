@@ -1,6 +1,6 @@
 import meilisearch
 from pydantic import BaseModel
-from .BaseService import BaseService
+from .baseservice import BaseService
 import os 
 from cat.log import log
 

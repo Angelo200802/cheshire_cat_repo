@@ -1,4 +1,4 @@
-from .BaseService import BaseService
+from .baseservice import BaseService
 from ..utility import load_service
 #from .meili import MeiliService
 class Service:

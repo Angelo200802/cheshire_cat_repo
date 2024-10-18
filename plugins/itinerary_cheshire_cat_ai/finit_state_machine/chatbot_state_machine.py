@@ -24,10 +24,9 @@ class AutomatMachine(Automa):
             if "callback" in out:
                 out = out["callback"]()
             if 'next_state' in out: #bisogna aggiungere next_state per impostare il prossimo stato
-                print(f"Passo dallo stato {self.cur_state}")
                 self.cur_state = out['next_state']
-                print(f"A {self.cur_state}")
                 out.pop('next_state',None) #per richiamare il prossimo metodo devo conoscere lo stato
+            print(f"STATO = {self.cur_state}")
             return out
         else:
             raise ValueError("Errore: lo stato corrente non esiste.")

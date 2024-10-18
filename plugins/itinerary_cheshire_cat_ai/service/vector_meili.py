@@ -1,4 +1,4 @@
-from .BaseService import BaseService
+from .baseservice import BaseService
 from dotenv import load_dotenv, find_dotenv
 import os 
 import meilisearch
