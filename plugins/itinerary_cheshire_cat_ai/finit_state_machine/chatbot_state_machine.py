@@ -15,12 +15,10 @@ class AutomatMachine(Automa):
                             'confirm' : self.machine.confirm_result ,
                             'step_ok' : self.machine.step_ok,
                             'closed' : self.machine.closed }
-        self.cur_state = next(iter(self.method_state)) #Bisogna mettere il primo stato come primo elemento del dizionario
-        last_state = next(reversed(self.method_state))
-        self.final_state = self.method_state[last_state]
+        self.cur_state = list(self.method_state)[0] #Bisogna mettere il primo stato come primo elemento del dizionario
+        self.final_state = list(self.method_state)[len(list(self.method_state))-1]
     
     def execute_transition(self) -> dict:
-        print(f"CURRENT STATE = {self.cur_state}, function = {self.method_state[self.cur_state]}")
         if self.cur_state in self.method_state:
             out = self.method_state[self.cur_state]()
             if "callback" in out:

@@ -28,6 +28,8 @@ class CatDevices:
 
 service = load_service()
 
+stop_examples = ["stop","fermati","non voglio continuare"]
+
 builder = TypeMachineBuilder(ChatBotController,CatDevices)
 init = builder.state("init")
 ask_adv = builder.state("ask_adv")
@@ -57,10 +59,10 @@ def init_method(controller: ChatBotController,devices:CatDevices) -> dict:
                     "Metti insieme un itinerario partendo da queste tappe.","Sviluppa un itinerario basato sui luoghi indicati."
                     ,"Costruisci un percorso utilizzando le seguenti tappe.","Elabora un itinerario tenendo conto di queste destinazioni.",
                     "Progetta un percorso seguendo le tappe elencate.","Imposta un itinerario considerando le seguenti località.",
-                    "Definisci un percorso basato su queste tappe.","Crea un tragitto seguendo le destinazioni indicate."]
+                    "Definisci un percorso basato su queste tappe.","Crea un tragitto seguendo le destinazioni indicate."],
     }
-    classe = devices.cat.classify(user_message,labels=example_label)
-    print(f"CLASS = {classe}")
+    classe = classify(devices.cat,user_message,example_label)
+    print(f"classe = {classe}")
     if classe == "advice" or classe == "telling":
         if classe == "telling":
             okay = verify_destination_is_present(devices.cat)
@@ -114,14 +116,17 @@ def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) 
     user_message = history[len(history)-1]['message']
     example_label = {
         "advice" : ["Vorrei un suggerimento","Vorrei un suggerimento basato sulle seguenti città"],
-        "initial_dest" : ["No","Non voglio suggerimenti"]
+        "initial_dest" : ["No","Non voglio suggerimenti"],
+        "exit" : stop_examples
     }
     classe = devices.cat.classify(user_message,labels=example_label)
     print(f"CLASS = {classe}")
     if classe == "initial_dest":
         return {"callback":controller.ask_step}
-    else:
+    elif classe == "advice":
         return {"callback":controller.tell_advice}
+    else:
+        return {"callback" : controller.closed}
 
 @wait_conf_adv.upon(ChatBotController.ask_step).to(step_ok)
 @init.upon(ChatBotController.ask_step).to(step_ok)
@@ -134,6 +139,15 @@ def ask_step_method(controller:ChatBotController,devices:CatDevices) -> dict:
 
 @step_ok.upon(ChatBotController.step_ok).loop()
 def step_ok_method(controller:ChatBotController,devices:CatDevices) -> dict:
+    history = devices.cat.working_memory.history
+    user_message = history[len(history)-1]['message']
+    example_label = {
+        "exit" : stop_examples
+    }
+    classe = classify(devices.cat,user_message,example_label)
+    print(f"classe = {classe}")
+    if classe == "exit":
+        return {"callback" : controller.closed}
     okay = verify_destination_is_present(devices.cat)
     if okay :
         return {"callback":controller.tell_advice}
@@ -154,9 +168,10 @@ def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> di
                 "No, tieni conto delle tappe indicate.","No, prendi in considerazione questi luoghi.","No, segui queste destinazioni.",
                 "No, usa queste tappe come base.","No, parti dalle località elencate.","No, organizza il tutto seguendo queste tappe.",
                 "No, concentrati sulle seguenti destinazioni."],
-        "ask" : ["No","non vanno bene"]
+        "ask" : ["No","non vanno bene"],
+        "exit" : stop_examples
     }
-    classe = devices.cat.classify(user_message,labels=example_label)
+    classe = classify(devices.cat,user_message,example_label)
     print(f"CLASS = {classe}")
     if classe == "tell" :
         return {"callback":controller.tell_advice}
@@ -166,8 +181,13 @@ def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> di
         return {"callback":controller.closed}
 
 @confirm.upon(ChatBotController.closed).to(closed)
+@init.upon(ChatBotController.closed).to(closed)
+@wait_conf_adv.upon(ChatBotController.closed).to(closed)
+@step_ok.upon(ChatBotController.closed).to(closed)
 def closed_method(controller:ChatBotController,devices:CatDevices) -> dict:
-    return {"output": ''}
+    prompt = f"""Il tuo compito è ringraziare l'utente per averti usato e invitalo a usarti nuovamente."""
+    out = devices.cat.llm(prompt)
+    return {"output": out, "next_state" : closed.name}
 
 def verify_destination_is_present(cat) -> bool:
     history = cat.working_memory.history
@@ -181,3 +201,35 @@ machineFactory = builder.build()
 
 def get_machine(cat) -> TypeMachine:
     return machineFactory(CatDevices(cat))
+
+def classify(cat,mex,label) -> str:
+    if isinstance(label, dict):
+            labels_names = label.keys()
+            examples_list = "\n\nExamples:"
+            for label, examples in label.items():
+                for ex in examples:
+                    examples_list += f'\n"{ex}" -> "{label}"'
+    else:
+        labels_names = label
+        examples_list = ""
+
+    labels_list = '"' + '", "'.join(labels_names) + '"'
+
+    prompt = f"""Classify this sentence:
+"{mex}"
+
+Allowed classes are:
+{labels_list}{examples_list}
+
+Return a json with this format:
+{{ "label" : label assigned to the sentence}}
+"""
+
+    response = cat.llm(prompt)
+    i = response.index('{')
+    f = response[::-1].index("}")
+    response = response[i:len(response)-f]
+    response_json = json.loads(response)
+    return response_json["label"]
+    
+

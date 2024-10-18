@@ -1,4 +1,4 @@
-from cat.experimental.form import form, CatForm
+from cat.experimental.form import form, CatForm, CatFormState
 from ..utility import get_automa
 from ..finit_state_machine.automa import Automa
 
@@ -29,15 +29,10 @@ class CreateItineraryForm(CatForm):
         self.state_machine = get_automa(cat)
         
     
-    def submit(self,model):
-        prompt = """Ringrazia l'utente e invitalo a chiederti ulteriori cose"""
-        out = self.cat.llm(prompt)
-        return {"output":out}
-    
     def next(self):
         out = self.state_machine.execute_transition()
         if self.state_machine.get_cur_state() == self.state_machine.get_final_state():
-            return self.submit({})
+            self._state = CatFormState.CLOSED
         return out
         
 
