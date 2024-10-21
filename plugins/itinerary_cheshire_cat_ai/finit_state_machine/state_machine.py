@@ -66,7 +66,7 @@ def init_method(controller: ChatBotController,devices:CatDevices) -> dict:
 def ask_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = """Chiedi all'utente se vuole dare delle destinazioni iniziali oppure se vuole dei consigli"""
     out = devices.cat.llm(prompt)
-    return {"output" : out, "next_state":wait_conf_adv.name}
+    return {"output" : f"""{{"mex" : {out}}}""", "next_state":wait_conf_adv.name}
 
 @init.upon(ChatBotController.tell_advice).to(confirm)
 @wait_conf_adv.upon(ChatBotController.tell_advice).to(confirm)
@@ -80,17 +80,25 @@ def tell_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
         Dunque estrai le destinazioni dalla conversazione, se nessuna destinazione viene specificata la lista deve
         essere vuota.
     """
-    dest = get_json(devices.cat,prompt)
-    prompt = f"""Il tuo compito è dire all'utente che stai per presentare un itinerario"""
-    mex = devices.cat.llm(prompt)
-    if len(dest['destinazioni']) == 0:
-        #Cerca le destinazioni migliori e presentale
-        results = service.search('',5)
+    dest = get_json(devices.cat,prompt)['destinazioni']
+    if len(dest) == 0:
+        results = []
+        #Creare un itinerario senza indicazioni
     else:
-        query = ""#crea la query in base alle destinazioni
-        results = service.search(query,5)
-    out = f"""{{ "mex" : "{mex}" , "results":{results} }}"""
-    return {"output":out,"next_state" : confirm.name}
+        results = []
+        for d in dest:
+            data = luoghi_da_visitare(dest[d],2)
+            results.append(data)
+    prompt = f"""Presenta i seguenti risultati di un itinerario generando un json nel seguente formato:
+    {{
+        "mex" : messaggio
+        "results" : {results} 
+    }}
+    Dove messaggio nel campo "mex" è un testo introduttivo che presenta "results", e che deve chiedere all'utente se desidera confermare 
+    l'itinerario
+    """
+    out = get_json(devices.cat, prompt)
+    return {"output":f"{out}","next_state" : confirm.name}
 
 @wait_conf_adv.upon(ChatBotController.wait_confirm_advice).loop()
 def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
@@ -120,7 +128,7 @@ def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) 
 def ask_step_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = """Chiedi all'utente quali destinazioni desidera avere nel suo itinerario"""
     out = devices.cat.llm(prompt)
-    return {"output": out, "next_state" : step_ok.name}
+    return {"output": f"""{{"mex" : {out}}}""", "next_state" : step_ok.name}
 
 @step_ok.upon(ChatBotController.step_ok).loop()
 def step_ok_method(controller:ChatBotController,devices:CatDevices) -> dict:
@@ -149,7 +157,6 @@ def step_ok_method(controller:ChatBotController,devices:CatDevices) -> dict:
 
 @confirm.upon(ChatBotController.confirm_result).loop()
 def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> dict:
-    #estrai dall'ultimo messaggio se l'utente conferma i risultati
     history = devices.cat.working_memory.history
     user_message = history[len(history)-1]['message']
     prompt = f"""Considera il seguente messaggio: {user_message}.
@@ -179,7 +186,7 @@ def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> di
 def closed_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = f"""Il tuo compito è ringraziare l'utente per averti usato e invitalo a usarti nuovamente."""
     out = devices.cat.llm(prompt)
-    return {"output": out, "next_state" : closed.name}
+    return {"output": f"""{{"mex" : {out}}}""", "next_state" : closed.name}
 
 def verify_destination_is_present(cat) -> bool:
     history = cat.working_memory.history
@@ -190,15 +197,30 @@ def verify_destination_is_present(cat) -> bool:
     step = cat.llm(prompt)
     return 'true' in step.lower()
 
-machineFactory = builder.build()
-
-def get_machine(cat) -> TypeMachine:
-    return machineFactory(CatDevices(cat))
-
 def get_json(cat,prompt):
     response:str = cat.llm(prompt)
     i = response.index("{")
     f = response[::-1].index("}")
     return json.loads(response[i:len(response)-f])
-    
 
+import requests
+import random 
+def luoghi_da_visitare(luoghi:str,num:int):
+    url =  f"https://calabriastraordinaria.it/ajax/search"
+    resp = requests.get(url, params={
+        "q": f"luoghi {luoghi}",
+        "lang": "it",
+        "limit": "12",
+        "page": "1"
+       })
+    if resp.status_code != 200:
+        print(f"ERROR = {resp.status_code}")
+        return "..."
+    else:
+        data = random.sample(resp.json()["results"], num )
+        return data
+
+machineFactory = builder.build()
+
+def get_machine(cat) -> TypeMachine:
+    return machineFactory(CatDevices(cat))

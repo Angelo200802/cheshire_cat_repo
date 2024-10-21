@@ -20,12 +20,11 @@ class AutomatMachine(Automa):
     
     def execute_transition(self) -> dict:
         if self.cur_state in self.method_state:
-            out = self.method_state[self.cur_state]()
+            out : dict = self.method_state[self.cur_state]()
             if "callback" in out:
                 out = out["callback"]()
             if 'next_state' in out: #bisogna aggiungere next_state per impostare il prossimo stato
-                self.cur_state = out['next_state']
-                out.pop('next_state',None) #per richiamare il prossimo metodo devo conoscere lo stato
+                self.cur_state = out.pop('next_state',None) #per richiamare il prossimo metodo devo conoscere lo stato
             print(f"STATO = {self.cur_state}")
             return out
         else:
