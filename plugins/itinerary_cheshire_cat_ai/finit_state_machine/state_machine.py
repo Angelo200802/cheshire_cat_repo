@@ -48,7 +48,8 @@ def init_method(controller: ChatBotController,devices:CatDevices) -> dict:
     Restituisci un json nel seguente formato:
     {{ 
         "label": valore 
-    }} Dove valore è uno delle seguenti etichette:
+    }} 
+    Dove valore è uno delle seguenti etichette:
     "adv" se nel messaggio viene chiesto un suggerimento su un itinerario, 
     "step" se nel messaggio si chiede di creare un itinerario basato su delle tappe,
     "ask" se il messaggio non specifica un suggerimento oppure se non sono presenti tappe specificate."""
@@ -66,7 +67,7 @@ def init_method(controller: ChatBotController,devices:CatDevices) -> dict:
 def ask_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = """Chiedi all'utente se vuole dare delle destinazioni iniziali oppure se vuole dei consigli"""
     out = devices.cat.llm(prompt)
-    return {"output" : f"""{{"mex" : {out}}}""", "next_state":wait_conf_adv.name}
+    return {"output" : f"""{{"mex" : "{out}"}}""", "next_state":wait_conf_adv.name}
 
 @init.upon(ChatBotController.tell_advice).to(confirm)
 @wait_conf_adv.upon(ChatBotController.tell_advice).to(confirm)
@@ -82,13 +83,15 @@ def tell_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
     """
     dest = get_json(devices.cat,prompt)['destinazioni']
     if len(dest) == 0:
-        results = []
-        #Creare un itinerario senza indicazioni
-    else:
-        results = []
-        for d in dest:
-            data = luoghi_da_visitare(dest[d],2)
-            results.append(data)
+        dest = get_random_places(3)
+    print(dest)
+    results = {}
+    i = 0
+    for d in dest:
+        data = luoghi_da_visitare(dest[d],2)
+        for place in data:
+            results[i] = place
+            i += 1
     prompt = f"""Presenta i seguenti risultati di un itinerario generando un json nel seguente formato:
     {{
         "mex" : messaggio
@@ -98,7 +101,7 @@ def tell_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
     l'itinerario
     """
     out = get_json(devices.cat, prompt)
-    return {"output":f"{out}","next_state" : confirm.name}
+    return {"output":f"""{out}""","next_state" : confirm.name}
 
 @wait_conf_adv.upon(ChatBotController.wait_confirm_advice).loop()
 def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
@@ -128,7 +131,7 @@ def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) 
 def ask_step_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = """Chiedi all'utente quali destinazioni desidera avere nel suo itinerario"""
     out = devices.cat.llm(prompt)
-    return {"output": f"""{{"mex" : {out}}}""", "next_state" : step_ok.name}
+    return {"output": f"""{{"mex" : "{out}"}}""", "next_state" : step_ok.name}
 
 @step_ok.upon(ChatBotController.step_ok).loop()
 def step_ok_method(controller:ChatBotController,devices:CatDevices) -> dict:
@@ -186,7 +189,7 @@ def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> di
 def closed_method(controller:ChatBotController,devices:CatDevices) -> dict:
     prompt = f"""Il tuo compito è ringraziare l'utente per averti usato e invitalo a usarti nuovamente."""
     out = devices.cat.llm(prompt)
-    return {"output": f"""{{"mex" : {out}}}""", "next_state" : closed.name}
+    return {"output": f"""{{"mex" : "{out}"}}""", "next_state" : closed.name}
 
 def verify_destination_is_present(cat) -> bool:
     history = cat.working_memory.history
@@ -220,7 +223,18 @@ def luoghi_da_visitare(luoghi:str,num:int):
         data = random.sample(resp.json()["results"], num )
         return data
 
-machineFactory = builder.build()
+def get_random_places(num:int):
+    url = "https://cs-stage.altrama.com/search/destinazioni"
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        print(f"Errore: {resp.status_code}")
+    else:
+        res = {}
+        data = random.sample(resp.json()['results'],num)
+        for i,x in enumerate(data):
+            res[i] = x['title']
+        return res
 
+machineFactory = builder.build()
 def get_machine(cat) -> TypeMachine:
     return machineFactory(CatDevices(cat))
