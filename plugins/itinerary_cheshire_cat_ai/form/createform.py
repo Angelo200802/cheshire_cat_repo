@@ -10,7 +10,6 @@ class CreateItineraryForm(CatForm):
                     "suggeriscimi un itinerario","Puoi consigliarmi un itinerario?",
                     "Vorrei sapere se hai suggerimenti per un itinerario interessante","Puoi suggerirmi un percorso da esplorare?",
                     "Hai qualche raccomandazione per un itinerario?","Mi servirebbero consigli su dove andare durante il viaggio",
-                    "Quali attrazioni dovrei includere nel mio itinerario?",
                     "Vorrei creare un itinerario","Mi piacerebbe pianificare un itinerario.","Ho intenzione di organizzare un percorso di viaggio.",
                     "Voglio mettere insieme un itinerario.","Desidero strutturare un itinerario.","Sto pensando di creare un percorso di viaggio.",
                     "Mi interessa elaborare un itinerario.","Voglio definire un percorso per il mio viaggio.",

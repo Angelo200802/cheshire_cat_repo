@@ -1,7 +1,7 @@
 from typing import Protocol
 from automat import TypeMachine, TypeMachineBuilder
 import dataclasses
-from ..utility import load_service
+from ..utility import load_service, get_random_places, luoghi_da_visitare, get_json
 import json
 
 class ChatBotController(Protocol):
@@ -200,40 +200,6 @@ def verify_destination_is_present(cat) -> bool:
     step = cat.llm(prompt)
     return 'true' in step.lower()
 
-def get_json(cat,prompt):
-    response:str = cat.llm(prompt)
-    i = response.index("{")
-    f = response[::-1].index("}")
-    return json.loads(response[i:len(response)-f])
-
-import requests
-import random 
-def luoghi_da_visitare(luoghi:str,num:int):
-    url =  f"https://calabriastraordinaria.it/ajax/search"
-    resp = requests.get(url, params={
-        "q": f"luoghi {luoghi}",
-        "lang": "it",
-        "limit": "12",
-        "page": "1"
-       })
-    if resp.status_code != 200:
-        print(f"ERROR = {resp.status_code}")
-        return "..."
-    else:
-        data = random.sample(resp.json()["results"], num )
-        return data
-
-def get_random_places(num:int):
-    url = "https://cs-stage.altrama.com/search/destinazioni"
-    resp = requests.get(url)
-    if resp.status_code != 200:
-        print(f"Errore: {resp.status_code}")
-    else:
-        res = {}
-        data = random.sample(resp.json()['results'],num)
-        for i,x in enumerate(data):
-            res[i] = x['title']
-        return res
 
 machineFactory = builder.build()
 def get_machine(cat) -> TypeMachine:
