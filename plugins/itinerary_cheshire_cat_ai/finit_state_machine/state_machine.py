@@ -1,7 +1,7 @@
 from typing import Protocol
 from automat import TypeMachine, TypeMachineBuilder
 import dataclasses
-from ..utility import load_service, get_random_places, luoghi_da_visitare, get_json
+from ..utility import load_service, get_random_places, luoghi_da_visitare, get_json, get_random_itinerary
 import json
 
 class ChatBotController(Protocol):
@@ -53,7 +53,7 @@ def init_method(controller: ChatBotController,devices:CatDevices) -> dict:
     "adv" se nel messaggio viene chiesto un suggerimento su un itinerario, 
     "step" se nel messaggio si chiede di creare un itinerario basato su delle tappe,
     "ask" se il messaggio non specifica un suggerimento oppure se non sono presenti tappe specificate."""
-    classe = get_json(devices.cat,prompt)['label']
+    classe = get_json(devices.cat,prompt,object=True)['label']
     if classe == "adv" or classe == "step":
         if classe == "step" and not verify_destination_is_present(devices.cat):
             return {"callback": controller.ask_step}
@@ -81,27 +81,28 @@ def tell_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
         Dunque estrai le destinazioni dalla conversazione, se nessuna destinazione viene specificata la lista deve
         essere vuota.
     """
-    dest = get_json(devices.cat,prompt)['destinazioni']
+    dest = get_json(devices.cat,prompt,object=True)['destinazioni']
     if len(dest) == 0:
-        dest = get_random_places(3)
-    print(dest)
-    results = {}
-    i = 0
-    for d in dest:
-        data = luoghi_da_visitare(dest[d],2)
-        for place in data:
-            results[i] = place
-            i += 1
+        results = get_random_itinerary()
+    else:
+        results = {}
+        i = 0
+        for d in dest:
+            data = luoghi_da_visitare(dest[d],2)
+            for place in data:
+                results[i] = place
+                i += 1
     prompt = f"""Presenta i seguenti risultati di un itinerario generando un json nel seguente formato:
     {{
         "mex" : messaggio
-        "results" : {results} 
+        "results" : {results},
+        "type" : itinerary
     }}
-    Dove messaggio nel campo "mex" è un testo introduttivo che presenta "results", e che deve chiedere all'utente se desidera confermare 
+    Dove messaggio nel campo "mex" è un testo introduttivo che presenta e introduce il contenuto di "results", e che deve chiedere all'utente se desidera confermare 
     l'itinerario
     """
     out = get_json(devices.cat, prompt)
-    return {"output":f"""{out}""","next_state" : confirm.name}
+    return {"output":out,"next_state" : confirm.name}
 
 @wait_conf_adv.upon(ChatBotController.wait_confirm_advice).loop()
 def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) -> dict:
@@ -117,7 +118,7 @@ def wait_confirm_advice_method(controller:ChatBotController,devices:CatDevices) 
     "exit" se il messaggio è simile uno dei seguenti valori : {stop_examples},
     "dest" se nel messaggio viene detto che si vuole basare l'itinerario su delle tappe
     """
-    classe = get_json(devices.cat,prompt)['label']
+    classe = get_json(devices.cat,prompt,object=True)['label']
     if classe == "adv" or classe == "dest":
         if classe == "dest" and not verify_destination_is_present(devices.cat):
             return {"callback" : controller.ask_step}
@@ -147,7 +148,7 @@ def step_ok_method(controller:ChatBotController,devices:CatDevices) -> dict:
     "adv" se nel messaggio si sta chiedendo un suggerimento,
     "step" se nel messaggio si fa riferimento ad un elenco di tappe/destinazioni di un itinerario
     """ 
-    classe = get_json(devices.cat,prompt)['label']
+    classe = get_json(devices.cat,prompt,object=True)['label']
     if classe == "exit":
         return {"callback" : controller.closed }
     elif classe == "adv":
@@ -173,7 +174,7 @@ def confirm_result_method(controller:ChatBotController,devices:CatDevices) -> di
     "step" se il messaggio fa riferimento a delle tappe/destinazioni di un itinerario,
     "adv" se il messaggio è negativo e/o viene chiesto un altro suggerimento
     """
-    classe = get_json(devices.cat,prompt)['label']
+    classe = get_json(devices.cat,prompt,object=True)['label']
     if classe == "exit" or classe == "close":
         return {"callback" : controller.closed }
     elif classe == "step":

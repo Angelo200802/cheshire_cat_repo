@@ -5,16 +5,7 @@ from .automa import Automa
 class AutomatMachine(Automa):
 
     def __init__(self,cat):
-        self.machine : TypeMachine = get_machine(cat)
-        #self.method_state = method_state() #devo memorizzare tutti gli stati con i metodi associati
-        self.method_state = {'init' : self.machine.init ,
-                            'ask_adv' : self.machine.ask_advice ,
-                            'tell_adv' : self.machine.tell_advice ,
-                            'ask_step' : self.machine.ask_step ,
-                            'wait_conf_adv': self.machine.wait_confirm_advice ,
-                            'confirm' : self.machine.confirm_result ,
-                            'step_ok' : self.machine.step_ok,
-                            'closed' : self.machine.closed }
+        self.method_state = method_state(cat) #devo memorizzare tutti gli stati con i metodi associati
         self.cur_state = list(self.method_state)[0] #Bisogna mettere il primo stato come primo elemento del dizionario
         self.final_state = list(self.method_state)[len(list(self.method_state))-1]
     
