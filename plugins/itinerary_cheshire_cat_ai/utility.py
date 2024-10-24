@@ -1,7 +1,6 @@
 from cat.mad_hatter.decorators import hook,tool
 from .service.baseservice import BaseService
 from pydantic import BaseModel
-from cat.log import log
 import dataclasses 
 import random
 import json
@@ -16,28 +15,28 @@ def agent_prompt_prefix(prefix,cat):
     prefix = settings['prefix']
     return prefix
 
-@tool(return_direct = True,examples=['Quali eventi si terranno'])
-def get_events(city,cat):
-    """Utile quando l'utente chiede quali eventi si terranno in una città, city è l'input
-    """
-    url = "https://cs-stage.altrama.com/search/eventi"
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(f"Errore : {response.status_code}")
-    localita = []
-    for elem in response.json()['results']:
-        if elem['address'] == city:
-            localita.append(elem)
-    data = random.sample(localita,1)
-    i = 0
-    res = {}
-    for x in data:
-        res[i] = x
-        i += 1
-    prompt = f"""Il tuo compito è quello di generare un json con il seguente formato:
-                {{ 'mex' : messaggio , 'results' : {res}}}
-                Dove messaggio è un testo introduttivo che presenta gli eventi presenti in {res}"""
-    return cat.llm(prompt)
+#@tool(return_direct = True,examples=['Quali eventi si terranno'])
+#def get_events(city,cat):
+#    """Utile quando l'utente chiede quali eventi si terranno in una città, city è l'input
+#    """
+#    url = "https://cs-stage.altrama.com/search/eventi"
+#    response = requests.get(url)
+#    if response.status_code != 200:
+#        print(f"Errore : {response.status_code}")
+#    localita = []
+#    for elem in response.json()['results']:
+#        if elem['address'] == city:
+#            localita.append(elem)
+#    data = random.sample(localita,1)
+#    i = 0
+#    res = {}
+#    for x in data:
+#        res[i] = x
+#        i += 1
+#    prompt = f"""Il tuo compito è quello di generare un json con il seguente formato:
+#                {{ 'mex' : messaggio , 'results' : {res}}}
+#                Dove messaggio è un testo introduttivo che presenta gli eventi presenti in {res}"""
+#    return cat.llm(prompt)
 
 @tool(return_direct=True,examples=["Cosa posso vedere a"])
 def what_can_i_see(city,cat):
@@ -58,40 +57,63 @@ def what_can_i_see(city,cat):
     response = get_json(cat,prompt)
     return response
 
-@tool(return_direct=True,examples=["Aggiornami sulle ultime novità","Dimmi le ultime news"])
-def last_news(city,cat): #magari specificando la città
-    """Utile quando l'utente chiede di fornire le ultime news. City è l'input, se non viene specificato è una stringa vuota"""
-    url = "https://cs-stage.altrama.com/search/news"
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(f"Errore : {response.status_code}")
-    response = response.json()['results'][:3]
-    news = {}
-    i = 0
-    for n in response:
-        print(n)
-        news[i] = n
-        i += 1
-    prompt = f"""Il tuo compito è quello di generare un json con il seguente formato:
-                {{ 'mex' : messaggio , 'results' : {news}}}
-                Dove messaggio è un testo introduttivo che presenta le news contenute in {news}"""
-    return cat.llm(prompt)
+#@tool(return_direct=True,examples=["Aggiornami sulle ultime novità","Dimmi le ultime news"])
+#def last_news(city,cat): #magari specificando la città
+#    """Utile quando l'utente chiede di fornire le ultime news. City è l'input, se non viene specificato è una stringa vuota"""
+#    url = "https://cs-stage.altrama.com/search/news"
+#    response = requests.get(url)
+#    if response.status_code != 200:
+#        print(f"Errore : {response.status_code}")
+#    response = response.json()['results'][:3]
+#    news = {}
+#    i = 0
+#    for n in response:
+#        print(n)
+#        news[i] = n
+#        i += 1
+#    prompt = f"""Il tuo compito è quello di generare un json con il seguente formato:
+#                {{ 'mex' : messaggio , 'results' : {news}}}
+#                Dove messaggio è un testo introduttivo che presenta le news contenute in {news}"""
+#    return cat.llm(prompt)
 
-@hook("agent_fast_reply")
-def agent_fast_reply(fast_reply, cat):
-    mex = cat.working_memory.user_message_json.text
-    mex_json = json.loads(mex)
-    example_labels = {
-        "itinerary": ["Voglio vedere i miei itinerari", "Fammi vedere i miei itinerari"] 
-    }
-    method = {
-        'itinerary' : "get_itinerario"
-    }
-    if len(list(mex_json)) == 1 and 'mex' in mex_json:
-        label = cat.classify(mex_json['mex'],labels=example_labels)
-        if label in method:
-            fast_reply['output'] = f"""{{ "action" : "{method[label]}", "type":"{label}", "mex" : "{mex_json['mex']}" }}"""
-    return fast_reply
+#@hook("agent_fast_reply") #altro modo un tool che si attiva se invii dei json
+#def agent_fast_reply(fast_reply, cat):
+#    mex = cat.working_memory.user_message_json.text
+#    mex_json = json.loads(mex)
+#    example_labels_action = {
+#        "itinerary": ["Voglio vedere i miei itinerari", "Fammi vedere i miei itinerari"] 
+#    }
+#    action = {
+#        'itinerary' : "get_itinerario"
+#    }
+#    example_labels_method = {
+#        "presenta_itinerario": ["Voglio vedere i miei itinerari", "Fammi vedere i miei itinerari"] 
+#    }
+#    method = {
+#        'itinerary' : {
+#            "presenta_itinerario" : presenta_itinerario
+#            }
+#    }
+#    if len(list(mex_json)) == 1 and 'mex' in mex_json:
+#        label = cat.classify(mex_json['mex'],labels=example_labels_action)
+#        if label in action:
+#            fast_reply['output'] = f"""{{ "action" : "{action[label]}", "type":"{label}", "mex" : "{mex_json['mex']}" }}"""
+#    if 'mex' in mex_json and 'data' in mex_json and 'type' in mex_json:
+#        label = cat.classify(mex_json['mex'],labels=example_labels_method)
+#        if label in method[mex_json['type']]:
+#            msg = presenta_itinerario(mex_json['mex'],mex_json['data'],cat)
+#            fast_reply['output'] = '{ "mex" : "'+msg+'", "status" : "successfull" }'
+#    return fast_reply
+
+
+
+def presenta_itinerario(mex,data,cat):
+    prompt = f"""Genera una risposta a {mex} in questo modo:
+    Introduci e presenta {data['title']},
+    dici all'utente che la categoria è {data['category']},
+    rendi più creativa la seguente descrizione {data['description']}
+    """
+    return cat.llm(prompt)
 
 def luoghi_da_visitare(luoghi:str,num:int):
     url =  f"https://calabriastraordinaria.it/ajax/search"
